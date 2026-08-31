@@ -1,5 +1,4 @@
-export function MotionEnhancer() {
-  const enhancementScript = `(() => {
+export function installMotionEnhancements() {
     const root = document.documentElement;
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     root.classList.add('motion-ready');
@@ -7,18 +6,17 @@ export function MotionEnhancer() {
     const revealItems = [...document.querySelectorAll('[data-reveal]')];
     if (reducedMotion) {
       revealItems.forEach((item) => item.classList.add('is-visible'));
-      return;
+    } else {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+
+      revealItems.forEach((item) => observer.observe(item));
     }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target);
-      });
-    }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
-
-    revealItems.forEach((item) => observer.observe(item));
 
     const updateScrollProgress = () => {
       const scrollable = document.documentElement.scrollHeight - window.innerHeight;
@@ -39,7 +37,10 @@ export function MotionEnhancer() {
         surface.style.setProperty('--pointer-y', '50%');
       });
     });
-  })();`;
+}
+
+export function MotionEnhancer() {
+  const enhancementScript = `(${installMotionEnhancements.toString()})();`;
 
   return <script dangerouslySetInnerHTML={{ __html: enhancementScript }} />;
 }
