@@ -1,38 +1,49 @@
-"use client";
-
-import { useState } from "react";
-import { Copy, Printer } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import { projects } from "@/lib/projects";
 
 export function ShowcaseActions() {
-  const [status, setStatus] = useState("");
-
-  const copyResumeText = async () => {
-    try {
-      await navigator.clipboard.writeText(
-        projects.map((project) => project.resumeCopy).join("\n\n"),
-      );
-      setStatus("三段简历描述已复制");
-    } catch {
-      setStatus("复制失败，请手动选择文本");
-    }
-  };
+  const resumeText = projects
+    .map((project) => project.resumeCopy)
+    .join("\n\n");
+  const enhancementScript = `(() => {
+    const root = document.querySelector('[data-showcase-actions]');
+    if (!root || root.dataset.ready === 'true') return;
+    root.dataset.ready = 'true';
+    const status = root.querySelector('[data-status]');
+    root.querySelector('[data-copy]')?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(${JSON.stringify(resumeText)});
+        if (status) status.textContent = '三段简历描述已复制';
+      } catch {
+        if (status) status.textContent = '复制失败，请手动选择文本';
+      }
+    });
+    root.querySelector('[data-print]')?.addEventListener('click', () => window.print());
+  })();`;
 
   return (
-    <div className="showcase-actions" data-screen-only="true">
-      <Button type="button" size="lg" onClick={copyResumeText}>
-        <Copy aria-hidden="true" />
+    <div
+      className="showcase-actions"
+      data-screen-only="true"
+      data-showcase-actions
+    >
+      <button
+        className="action-button action-primary"
+        type="button"
+        data-copy
+      >
+        <span aria-hidden="true">↗</span>
         复制简历描述
-      </Button>
-      <Button type="button" size="lg" variant="outline" onClick={() => window.print()}>
-        <Printer aria-hidden="true" />
+      </button>
+      <button
+        className="action-button action-secondary"
+        type="button"
+        data-print
+      >
+        <span aria-hidden="true">⎙</span>
         打印 / 保存 PDF
-      </Button>
-      <span role="status" aria-live="polite">
-        {status}
-      </span>
+      </button>
+      <span role="status" aria-live="polite" data-status />
+      <script dangerouslySetInnerHTML={{ __html: enhancementScript }} />
     </div>
   );
 }

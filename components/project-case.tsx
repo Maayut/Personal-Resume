@@ -1,6 +1,3 @@
-import { ArrowUpRight, CheckCircle2, ShieldCheck } from "lucide-react";
-
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -8,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import type { ProjectCase as Project } from "@/lib/projects";
 
 const accentClasses: Record<Project["id"], string> = {
@@ -54,9 +50,9 @@ export function ProjectCase({ project }: { project: Project }) {
       <div className="px-6 py-8 md:px-10 md:py-10">
         <div className="mb-8 flex flex-wrap gap-2">
           {project.tags.map((tag) => (
-            <Badge key={tag} variant="outline" className="tag-badge">
+            <span key={tag} className="tag-badge">
               {tag}
-            </Badge>
+            </span>
           ))}
         </div>
 
@@ -105,7 +101,7 @@ export function ProjectCase({ project }: { project: Project }) {
               <ul className="evidence-list">
                 {project.result.map((item) => (
                   <li key={item}>
-                    <CheckCircle2 aria-hidden="true" />
+                    <span className="icon-glyph" aria-hidden="true">✓</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -114,7 +110,7 @@ export function ProjectCase({ project }: { project: Project }) {
           </Card>
         </section>
 
-        <Separator className="my-10" />
+        <hr className="case-separator my-10" />
 
         <section aria-label="人机协作分工">
           <div className="section-kicker">
@@ -150,7 +146,7 @@ export function ProjectCase({ project }: { project: Project }) {
             </Card>
           </div>
           <div className="collaboration-loop">
-            <ArrowUpRight aria-hidden="true" />
+            <span className="icon-glyph" aria-hidden="true">↗</span>
             <p>
               <strong>协作闭环</strong>
               {project.collaborationLoop}
@@ -158,7 +154,7 @@ export function ProjectCase({ project }: { project: Project }) {
           </div>
         </section>
 
-        <Separator className="my-10" />
+        <hr className="case-separator my-10" />
 
         <section aria-label="工具选择">
           <div className="section-kicker">
@@ -180,7 +176,7 @@ export function ProjectCase({ project }: { project: Project }) {
         </section>
 
         <aside className="boundary-note">
-          <ShieldCheck aria-hidden="true" />
+          <span className="icon-glyph" aria-hidden="true">◆</span>
           <div>
             <strong>诚实边界</strong>
             <p>{project.boundary}</p>

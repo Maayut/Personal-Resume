@@ -46,11 +46,28 @@ test("the complete page renders every approved case", () => {
   }
 });
 
-test("recruiter actions support copy, feedback, and print", () => {
+test("recruiter actions support copy, feedback, and print without hydration", () => {
   assert.match(actions, /navigator\.clipboard\.writeText/);
   assert.match(actions, /window\.print/);
-  assert.match(actions, /role="status"/);
+  assert.match(actions, /data-status/);
   assert.match(actions, /复制失败，请手动选择文本/);
+  assert.doesNotMatch(actions, /["']use client["']/);
+  assert.doesNotMatch(actions, /useState/);
+});
+
+test("client actions avoid dependencies that duplicate renderers during HMR", () => {
+  assert.doesNotMatch(actions, /@\/components\/ui\/button/);
+  assert.doesNotMatch(actions, /lucide-react/);
+});
+
+test("rendered showcase components avoid Base UI client boundaries", () => {
+  assert.doesNotMatch(page, /@\/components\/ui\/badge/);
+  assert.doesNotMatch(projectCase, /@\/components\/ui\/(badge|separator)/);
+});
+
+test("server-rendered showcase avoids client-only icon packages", () => {
+  assert.doesNotMatch(page, /lucide-react/);
+  assert.doesNotMatch(projectCase, /lucide-react/);
 });
 
 test("print output hides screen-only controls and keeps cases together", () => {

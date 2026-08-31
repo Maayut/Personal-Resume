@@ -1,8 +1,5 @@
-import { ArrowDown, ArrowUpRight, Bot, CheckCircle2 } from "lucide-react";
-
 import { ProjectCase } from "@/components/project-case";
 import { ShowcaseActions } from "@/components/showcase-actions";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardDescription,
@@ -22,7 +19,7 @@ export default function Home() {
     <main>
       <nav className="site-nav" aria-label="页面导航">
         <a href="#top" className="brand-mark" aria-label="返回页面顶部">
-          <Bot aria-hidden="true" />
+          <span className="icon-glyph" aria-hidden="true">●</span>
           <span>Agent Casebook</span>
         </a>
         <div className="nav-links">
@@ -33,9 +30,9 @@ export default function Home() {
 
       <section id="top" className="hero-shell">
         <div className="hero-copy">
-          <Badge variant="outline" className="hero-badge">
+          <span className="hero-badge">
             AI AGENT PROJECT SHOWCASE · 2026
-          </Badge>
+          </span>
           <h1>
             把真实问题
             <br />
@@ -47,7 +44,7 @@ export default function Home() {
           </p>
           <a href="#projects" className="hero-link">
             查看项目
-            <ArrowDown aria-hidden="true" />
+            <span className="icon-glyph" aria-hidden="true">↓</span>
           </a>
         </div>
 
@@ -62,7 +59,7 @@ export default function Home() {
             ))}
           </div>
           <div className="proof-note">
-            <CheckCircle2 aria-hidden="true" />
+            <span className="icon-glyph" aria-hidden="true">✓</span>
             <p>所有结果均来自本地项目、测试记录与 Agent 对话历史交叉核验。</p>
           </div>
         </div>
@@ -87,7 +84,7 @@ export default function Home() {
                 <CardHeader>
                   <div className="index-topline">
                     <span>{project.index}</span>
-                    <ArrowUpRight aria-hidden="true" />
+                    <span className="icon-glyph" aria-hidden="true">↗</span>
                   </div>
                   <CardTitle>{project.title}</CardTitle>
                   <CardDescription>{project.subtitle}</CardDescription>
