@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUpRight, Bot, CheckCircle2 } from "lucide-react";
 
 import { ProjectCase } from "@/components/project-case";
+import { ShowcaseActions } from "@/components/showcase-actions";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -17,8 +18,6 @@ const quickMetrics = [
 ];
 
 export default function Home() {
-  const [featured, ...upcoming] = projects;
-
   return (
     <main>
       <nav className="site-nav" aria-label="页面导航">
@@ -81,7 +80,7 @@ export default function Home() {
           {projects.map((project) => (
             <a
               key={project.id}
-              href={project.id === featured.id ? "#" + project.id : "#next-cases"}
+              href={"#" + project.id}
               className="project-index-link"
             >
               <Card className={"index-card index-" + project.id} size="sm">
@@ -99,40 +98,52 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="content-shell">
-        <ProjectCase project={featured} />
+      <section className="content-shell case-stack">
+        {projects.map((project) => (
+          <ProjectCase key={project.id} project={project} />
+        ))}
       </section>
 
-      <section id="next-cases" className="content-shell next-cases">
-        <div className="section-heading compact-heading">
-          <span>COMING IN THIS SHOWCASE</span>
-          <h2>另外两个案例</h2>
+      <section id="capabilities" className="content-shell capabilities-section">
+        <div className="section-heading">
+          <span>02 — CAPABILITY</span>
+          <h2>我在三个项目中反复证明的能力</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          {upcoming.map((project) => (
-            <Card key={project.id} className="next-case-card shadow-none">
-              <CardHeader>
-                <div className="index-topline">
-                  <span>{project.index}</span>
-                  <span>{project.audience}</span>
-                </div>
-                <CardTitle className="text-xl">{project.title}</CardTitle>
-                <CardDescription className="leading-6">
-                  {project.subtitle}
-                </CardDescription>
-                <strong className="mt-4 text-sm text-[var(--ink)]">
-                  {project.metric}
-                </strong>
-              </CardHeader>
-            </Card>
+        <div className="capability-grid">
+          {[
+            ["01", "领域抽象", "把法律、面试与职业决策知识转成 Agent 可执行的结构。"],
+            ["02", "工作流设计", "为模型配置检索、状态、工具、证据与失败降级。"],
+            ["03", "真实验证", "用测试、trace、真实材料和用户反馈判断是否真正可用。"],
+          ].map(([index, title, description]) => (
+            <div key={title} className="capability-card">
+              <span>{index}</span>
+              <h3>{title}</h3>
+              <p>{description}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      <section id="capabilities" className="content-shell capability-preview">
-        <span>02 — CAPABILITY</span>
-        <h2>领域抽象 · Agent 工作流 · 真实验证</h2>
+      <section className="content-shell resume-section">
+        <div className="section-heading">
+          <span>03 — RESUME COPY</span>
+          <h2>可直接放进简历的项目描述</h2>
+          <p>保留问题、个人贡献和可验证结果，避免技术名词堆砌。</p>
+        </div>
+        <ShowcaseActions />
+        <div className="resume-copy-list">
+          {projects.map((project) => (
+            <article key={project.id}>
+              <span>{project.index}</span>
+              <p>{project.resumeCopy}</p>
+            </article>
+          ))}
+        </div>
       </section>
+
+      <footer className="content-shell site-footer">
+        <p>AI Agent Project Casebook · Evidence over hype.</p>
+      </footer>
     </main>
   );
 }

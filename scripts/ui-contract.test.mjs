@@ -6,9 +6,10 @@ async function read(path) {
   return readFile(new URL(path, import.meta.url), "utf8").catch(() => "");
 }
 
-const [page, projectCase, css, layout] = await Promise.all([
+const [page, projectCase, actions, css, layout] = await Promise.all([
   read("../app/page.tsx"),
   read("../components/project-case.tsx"),
+  read("../components/showcase-actions.tsx"),
   read("../app/globals.css"),
   read("../app/layout.tsx"),
 ]);
@@ -34,4 +35,24 @@ test("the visual system uses the approved project palette", () => {
 test("metadata is localized and specific", () => {
   assert.match(layout, /AI Agent 项目案例集/);
   assert.match(layout, /lang="zh-CN"/);
+});
+
+test("the complete page renders every approved case", () => {
+  assert.match(page, /projects\.map[\s\S]*<ProjectCase/);
+  for (const phrase of ["领域抽象", "工作流设计", "真实验证"]) {
+    assert.match(page, new RegExp(phrase));
+  }
+});
+
+test("recruiter actions support copy, feedback, and print", () => {
+  assert.match(actions, /navigator\.clipboard\.writeText/);
+  assert.match(actions, /window\.print/);
+  assert.match(actions, /role="status"/);
+  assert.match(actions, /复制失败，请手动选择文本/);
+});
+
+test("print output hides screen-only controls and keeps cases together", () => {
+  assert.match(css, /@media print/);
+  assert.match(css, /data-screen-only/);
+  assert.match(css, /break-inside:\s*avoid/);
 });
