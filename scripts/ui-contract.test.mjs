@@ -35,6 +35,8 @@ test("the visual system uses the approved project palette", () => {
 test("metadata is localized and specific", () => {
   assert.match(layout, /AI Agent 项目案例集/);
   assert.match(layout, /lang="zh-CN"/);
+  assert.match(layout, /openGraph/);
+  assert.match(layout, /raw\.githubusercontent\.com\/Maayut\/Personal-Resume\/main\/public\/og\.png/);
 });
 
 test("the complete page renders every approved case", () => {
