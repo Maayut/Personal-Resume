@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 const title = "AI Agent 项目案例集";
 const description =
-  "三个真实 Agent 项目的 STAR 复盘：用工合规、模拟面试与职业决策。";
+  "四个真实 Agent 项目的 STAR 复盘：用工合规、模拟面试、职业决策与网申自动化。";
 const socialImage =
   "https://raw.githubusercontent.com/Maayut/Personal-Resume/main/public/og.png";
 

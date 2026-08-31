@@ -4,7 +4,11 @@ export type ToolChoice = {
 };
 
 export type ProjectCase = {
-  id: "compliance" | "mock-interview" | "career-pathfinder";
+  id:
+    | "compliance"
+    | "mock-interview"
+    | "career-pathfinder"
+    | "resume-autofill";
   index: string;
   title: string;
   subtitle: string;
@@ -20,7 +24,6 @@ export type ProjectCase = {
   collaborationLoop: string;
   tools: ToolChoice[];
   boundary: string;
-  resumeCopy: string;
 };
 
 export const projects: ProjectCase[] = [
@@ -78,8 +81,6 @@ export const projects: ProjectCase[] = [
     ],
     boundary:
       "已确认 WeKnora 承载运行时 Agent，但未确认 WeKnora 底层具体 LLM；真实 RAG 复测当时也未传实际知识库 ID。",
-    resumeCopy:
-      "用工合规智能系统｜定义企业材料治理、知识库检索、风险诊断和报告生成闭环；与 AI Agent 协作完成 Go + Vue + PostgreSQL + WeKnora 全栈系统，为风险结论加入知识片段溯源和运行 trace；真实处理 26 份企业材料，本轮后端测试通过。",
   },
   {
     id: "mock-interview",
@@ -139,8 +140,6 @@ export const projects: ProjectCase[] = [
     ],
     boundary:
       "知识库规模仍低于原定 2000 份面经和 3000 道问题；外部平台真实 E2E 和移动端音频仍需继续验证。",
-    resumeCopy:
-      "MockInterview｜从真实面经构建可追溯知识库与中文电话面试 Agent；通过真实试用将“RAG 抽题”纠正为“LLM 围绕简历和回答动态追问”，使用 LangGraph、DeepSeek、FunASR、Edge TTS 完成语音闭环；本轮 238 项测试通过。",
   },
   {
     id: "career-pathfinder",
@@ -196,7 +195,60 @@ export const projects: ProjectCase[] = [
     ],
     boundary:
       "当前 PASS 是结构和行为夹具合同通过，不等同于大规模真实学生效果；证据充分度门槛也不等同于 95% 的统计准确率。",
-    resumeCopy:
-      "Career Pathfinder｜设计面向中国学生的职业决策 Agent，以行为证据、置信度、反证和可逆实验替代人格标签与伪精确评分；使用模块化 Skill、RED/GREEN 场景测试和独立审查约束 Agent 行为，修复 6 个重要问题并通过结构与契约校验。",
+  },
+  {
+    id: "resume-autofill",
+    index: "04",
+    title: "FillResume｜CVMax 网申助手复刻",
+    subtitle: "从商业插件逆向调研到隐私优先的本地网申自动填表工具",
+    audience: "高频投递的秋招求职者",
+    metric: "42/42 单元测试 · Chrome E2E 通过 · 零自动提交",
+    tags: ["Chrome MV3", "Clean-room", "Form Autofill", "Local-first"],
+    situation:
+      "秋招需要在不同招聘系统重复填写同一份资料；现有商业工具虽能提效，但实现源码不公开，云端匹配、敏感数据权限和失败边界难以核验。",
+    task:
+      "在不复制 CVMax 私有源码、接口或协议的前提下，复刻其核心网申填表体验，并把资料安全、人工终审和投递留痕设为硬边界。",
+    actions: [
+      "检索官方商店、隐私政策与开发者信息，下载并静态分析官方分发 CRX，建立可验证的功能矩阵。",
+      "我试用原插件并收窄范围后，Agent 将方案改为本地确定性字段分类器，不依赖云端 AI 匹配。",
+      "实现字段语义识别、原生 setter 与事件触发、动态表单重扫、资料存储和投递记录去重。",
+      "用 TDD、生产构建、隔离 Chrome E2E 和独立代码审查验证保存、填表、不自动提交与留痕闭环。",
+    ],
+    result: [
+      "形成可加载使用的 Chrome Manifest V3 扩展及发布 ZIP。",
+      "42/42 单元测试通过，并完成生产构建与独立代码审查。",
+      "Chrome E2E 覆盖保存资料、填写测试表单、不自动提交和生成一条投递记录。",
+      "个人资料与投递记录仅保存在 chrome.storage.local，不连接自建服务器。",
+    ],
+    humanRole: [
+      "提供 CVMax 目标链接与真实求职场景",
+      "安装登录原插件并完成安全试用",
+      "决定只保留自动填表与投递留痕",
+      "坚持人工审核提交和本地隐私边界",
+    ],
+    agentRole: [
+      "调查公开资料并分析分发 CRX",
+      "完成 clean-room 架构与风险取舍",
+      "实现扩展、测试、构建和安装包",
+      "用浏览器 E2E 与独立审查验证结果",
+    ],
+    collaborationLoop:
+      "我提出复刻目标并完成原插件试用 → Agent 还原功能与数据边界 → 我把范围收窄为本地填表和留痕 → Agent 以 TDD 实现并用 Chrome E2E 验证。",
+    tools: [
+      {
+        name: "Codex Agent",
+        reason: "适合持续进行资料调查、长任务拆解、跨文件实现和测试闭环；历史记录未明确具体模型版本。",
+      },
+      {
+        name: "Chrome + CRX 静态分析",
+        reason: "在找不到官方源码时，从公开分发物与真实交互中确认功能和边界，而不是凭外观猜测。",
+      },
+      {
+        name: "Node Test + Playwright",
+        reason: "同时覆盖字段规则、记录去重等逻辑，以及真实浏览器内的端到端行为。",
+      },
+    ],
+    boundary:
+      "这是 clean-room 功能复刻，不是 CVMax 官方源码；未复刻其服务端 AI 匹配、账号与商业系统，closed Shadow DOM、文件上传和部分自研控件仍需人工处理。",
   },
 ];

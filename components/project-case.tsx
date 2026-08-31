@@ -11,6 +11,7 @@ const accentClasses: Record<Project["id"], string> = {
   compliance: "accent-compliance",
   "mock-interview": "accent-interview",
   "career-pathfinder": "accent-career",
+  "resume-autofill": "accent-autofill",
 };
 
 const starItems = [
@@ -24,6 +25,8 @@ export function ProjectCase({ project }: { project: Project }) {
       id={project.id}
       aria-labelledby={project.id + "-title"}
       className={"project-case " + accentClasses[project.id]}
+      data-reveal
+      data-spotlight
     >
       <header className="grid gap-8 border-b border-[var(--line)] px-6 py-8 md:grid-cols-[1fr_auto] md:px-10 md:py-10">
         <div>
@@ -59,6 +62,7 @@ export function ProjectCase({ project }: { project: Project }) {
         <section
           aria-label="STAR 项目描述"
           className="grid gap-4 md:grid-cols-2"
+          data-reveal
         >
           {starItems.map(([letter, label, field]) => (
             <Card key={label} className="star-card shadow-none">
@@ -112,7 +116,7 @@ export function ProjectCase({ project }: { project: Project }) {
 
         <hr className="case-separator my-10" />
 
-        <section aria-label="人机协作分工">
+        <section aria-label="人机协作分工" data-reveal>
           <div className="section-kicker">
             <span>COLLABORATION</span>
             <h3>我做判断，Agent 放大执行</h3>
@@ -156,7 +160,7 @@ export function ProjectCase({ project }: { project: Project }) {
 
         <hr className="case-separator my-10" />
 
-        <section aria-label="工具选择">
+        <section aria-label="工具选择" data-reveal>
           <div className="section-kicker">
             <span>MODEL &amp; TOOLS</span>
             <h3>不是堆模型，而是按任务选择工具</h3>
