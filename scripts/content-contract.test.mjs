@@ -9,7 +9,7 @@ test("contains exactly the four approved projects", () => {
     "用工合规智能系统",
     "MockInterview",
     "Career Pathfinder",
-    "FillResume｜CVMax 网申助手复刻",
+    "FillResume｜智能网申助手",
   ]) {
     assert.match(source, new RegExp(name));
   }
@@ -37,7 +37,8 @@ test("preserves evidence boundaries", () => {
   assert.match(source, /238 项测试通过/);
   assert.match(source, /不等同于 95% 的统计准确率/);
   assert.match(source, /42\/42 单元测试/);
-  assert.match(source, /clean-room/);
+  assert.match(source, /个人秋招/);
+  assert.match(source, /AI Agent/);
   assert.match(source, /不自动提交/);
   assert.match(source, /Chrome E2E/);
 });
