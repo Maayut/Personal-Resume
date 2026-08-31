@@ -1,106 +1,138 @@
-const sidebarWidths = [74, 58, 82, 66, 71, 54];
-const articleWidths = [100, 97, 94, 98, 86];
+import { ArrowDown, ArrowUpRight, Bot, CheckCircle2 } from "lucide-react";
+
+import { ProjectCase } from "@/components/project-case";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { projects } from "@/lib/projects";
+
+const quickMetrics = [
+  ["03", "真实场景"],
+  ["业务 · 语音 · 决策", "三类 Agent"],
+  ["测试 · Trace · 反馈", "验证证据"],
+];
 
 export default function Home() {
-  return (
-    <main className="fixed inset-0 overflow-hidden bg-[#fbfaf8] text-zinc-900">
-      <header
-        aria-hidden="true"
-        className="grid h-[76px] grid-cols-[1fr_auto_1fr] items-center border-b border-stone-200 bg-white/95 px-6 sm:px-14"
-      >
-        <div className="flex items-center gap-3">
-          <span className="h-9 w-9 rounded-full bg-stone-100" />
-          <span className="h-3.5 w-28 rounded-full bg-stone-100" />
-        </div>
-        <span className="hidden h-9 w-[min(30vw,420px)] rounded-xl bg-stone-100 sm:block" />
-        <div className="flex items-center justify-end gap-3">
-          <span className="hidden h-9 w-9 rounded-full bg-stone-100 sm:block" />
-          <span className="h-9 w-24 rounded-xl bg-stone-100" />
-        </div>
-      </header>
+  const [featured, ...upcoming] = projects;
 
-      <div
-        aria-hidden="true"
-        className="grid h-[calc(100%-76px)] grid-cols-[180px_minmax(0,1fr)_260px] gap-10 px-6 pb-24 pt-10 opacity-55 max-lg:grid-cols-[150px_minmax(0,1fr)] max-sm:grid-cols-1 sm:px-14"
-      >
-        <aside className="hidden border-r border-stone-200 pr-7 sm:block">
-          <div className="mb-6 h-2.5 w-16 rounded-full bg-stone-200" />
-          <div className="space-y-4">
-            {sidebarWidths.map((width) => (
-              <div key={width} className="flex items-center gap-3">
-                <span className="h-4 w-4 rounded bg-stone-200" />
-                <span
-                  className="h-2.5 rounded-full bg-stone-200"
-                  style={{ width: `${width}%` }}
-                />
+  return (
+    <main>
+      <nav className="site-nav" aria-label="页面导航">
+        <a href="#top" className="brand-mark" aria-label="返回页面顶部">
+          <Bot aria-hidden="true" />
+          <span>Agent Casebook</span>
+        </a>
+        <div className="nav-links">
+          <a href="#projects">项目案例</a>
+          <a href="#capabilities">能力总结</a>
+        </div>
+      </nav>
+
+      <section id="top" className="hero-shell">
+        <div className="hero-copy">
+          <Badge variant="outline" className="hero-badge">
+            AI AGENT PROJECT SHOWCASE · 2026
+          </Badge>
+          <h1>
+            把真实问题
+            <br />
+            变成<span>可验证</span>的 Agent 产品
+          </h1>
+          <p className="hero-lead">
+            我定义真实问题和验收标准，向 Agent 提供领域材料与反馈；
+            Agent 放大研究与工程执行力。最终用测试、溯源和真实试用判断结果是否真正可用。
+          </p>
+          <a href="#projects" className="hero-link">
+            查看项目
+            <ArrowDown aria-hidden="true" />
+          </a>
+        </div>
+
+        <div className="hero-proof" aria-label="案例范围">
+          <p className="proof-label">SELECTED WORK</p>
+          <div className="proof-grid">
+            {quickMetrics.map(([value, label]) => (
+              <div key={label} className="proof-item">
+                <strong>{value}</strong>
+                <span>{label}</span>
               </div>
             ))}
           </div>
-          <div className="mb-6 mt-9 h-2.5 w-24 rounded-full bg-stone-200" />
-          <div className="space-y-4">
-            {sidebarWidths.slice(0, 3).map((width) => (
-              <span
-                key={width}
-                className="block h-2.5 rounded-full bg-stone-200"
-                style={{ width: `${width}%` }}
-              />
-            ))}
+          <div className="proof-note">
+            <CheckCircle2 aria-hidden="true" />
+            <p>所有结果均来自本地项目、测试记录与 Agent 对话历史交叉核验。</p>
           </div>
-        </aside>
+        </div>
+      </section>
 
-        <article className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-          <div className="space-y-3">
-            <div className="h-2.5 w-28 rounded-full bg-stone-200" />
-            <div className="h-7 w-4/5 rounded-lg bg-stone-200" />
-            <div className="h-7 w-3/5 rounded-lg bg-stone-200" />
-          </div>
-          <div className="min-h-[240px] flex-1 rounded-2xl bg-stone-200" />
-          <div className="flex items-center gap-3">
-            <span className="h-9 w-9 rounded-full bg-stone-200" />
-            <span className="h-2.5 w-28 rounded-full bg-stone-200" />
-          </div>
-          <div className="space-y-2">
-            {articleWidths.map((width) => (
-              <span
-                key={width}
-                className="block h-2.5 rounded-full bg-stone-200"
-                style={{ width: `${width}%` }}
-              />
-            ))}
-          </div>
-        </article>
-
-        <aside className="space-y-5 max-lg:hidden">
-          {[0, 1].map((card) => (
-            <div
-              key={card}
-              className="space-y-4 rounded-2xl border border-stone-200 bg-white/70 p-6"
+      <section id="projects" className="content-shell project-index">
+        <div className="section-heading">
+          <span>01 — SELECTED CASES</span>
+          <h2>三个项目，三种真实问题</h2>
+          <p>
+            不按代码量排序，优先展示真实受益对象、关键判断与可核验结果。
+          </p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {projects.map((project) => (
+            <a
+              key={project.id}
+              href={project.id === featured.id ? "#" + project.id : "#next-cases"}
+              className="project-index-link"
             >
-              <span className="block h-10 w-10 rounded-full bg-stone-200" />
-              <span className="block h-3 w-3/5 rounded-full bg-stone-200" />
-              <span className="block h-2.5 w-full rounded-full bg-stone-200" />
-              <span className="block h-2.5 w-4/5 rounded-full bg-stone-200" />
-              <span className="block h-8 w-24 rounded-lg bg-stone-200" />
-            </div>
+              <Card className={"index-card index-" + project.id} size="sm">
+                <CardHeader>
+                  <div className="index-topline">
+                    <span>{project.index}</span>
+                    <ArrowUpRight aria-hidden="true" />
+                  </div>
+                  <CardTitle>{project.title}</CardTitle>
+                  <CardDescription>{project.subtitle}</CardDescription>
+                </CardHeader>
+              </Card>
+            </a>
           ))}
-        </aside>
-      </div>
+        </div>
+      </section>
 
-      <output
-        aria-live="polite"
-        aria-atomic="true"
-        className="absolute left-1/2 top-[clamp(96px,13vh,122px)] w-[min(620px,calc(100%-40px))] -translate-x-1/2 rounded-[18px] border border-stone-200 bg-white/95 px-5 py-5 shadow-[0_18px_50px_rgb(24_24_27/9%)] backdrop-blur-sm"
-      >
-        <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.09em] text-stone-500">
-          Building your site
-        </p>
-        <h1 className="text-xl font-semibold tracking-tight">
-          Your site is taking shape
-        </h1>
-        <p className="mt-1 text-sm text-stone-500">
-          Your first version will appear here automatically when it’s ready.
-        </p>
-      </output>
+      <section className="content-shell">
+        <ProjectCase project={featured} />
+      </section>
+
+      <section id="next-cases" className="content-shell next-cases">
+        <div className="section-heading compact-heading">
+          <span>COMING IN THIS SHOWCASE</span>
+          <h2>另外两个案例</h2>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {upcoming.map((project) => (
+            <Card key={project.id} className="next-case-card shadow-none">
+              <CardHeader>
+                <div className="index-topline">
+                  <span>{project.index}</span>
+                  <span>{project.audience}</span>
+                </div>
+                <CardTitle className="text-xl">{project.title}</CardTitle>
+                <CardDescription className="leading-6">
+                  {project.subtitle}
+                </CardDescription>
+                <strong className="mt-4 text-sm text-[var(--ink)]">
+                  {project.metric}
+                </strong>
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section id="capabilities" className="content-shell capability-preview">
+        <span>02 — CAPABILITY</span>
+        <h2>领域抽象 · Agent 工作流 · 真实验证</h2>
+      </section>
     </main>
   );
 }
