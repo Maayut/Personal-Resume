@@ -31,7 +31,7 @@ export function SiteNav({ projectMode = false }: { projectMode?: boolean }) {
       <header className="site-nav">
         <div className="site-container nav-inner">
           <a className="nav-brand" href={homeHref()} aria-label="马毓廷个人主页">
-            MAYUTING / AI PM
+            马毓廷 ✣
           </a>
           <nav className="desktop-nav" aria-label="主导航">
             {links.map(({ label, hash }) => <a key={hash} href={hrefFor(hash)}>{label}</a>)}

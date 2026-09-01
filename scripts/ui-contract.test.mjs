@@ -21,9 +21,35 @@ test("shared page shells include the site navigation and footer", () => {
 });
 
 test("shared CSS exposes the site design tokens", () => {
-  for (const token of ["--ink", "--signal", "--paper", "--grid-line", "--ease-field"]) {
+  for (const token of [
+    "--paper",
+    "--paper-deep",
+    "--ink",
+    "--muted-ink",
+    "--signal",
+    "--signal-soft",
+    "--grid-line",
+    "--project-accent",
+    "--radius-sm",
+    "--radius-lg",
+    "--ease-field",
+    "--font-display",
+    "--font-body",
+  ]) {
     assert.match(css, new RegExp(token));
   }
+  assert.match(css, /--paper:\s*#f7f7f3;/);
+  assert.match(css, /--paper-deep:\s*#eceee9;/);
+  assert.match(css, /--ink:\s*#111915;/);
+  assert.match(css, /--muted-ink:\s*#5f6962;/);
+  assert.match(css, /--signal:\s*#4d6d47;/);
+  assert.match(css, /--signal-soft:\s*#dfe8dd;/);
+  assert.match(css, /font-family:\s*var\(--font-body\)/);
+  assert.match(css, /font-family:\s*var\(--font-display\)/);
+});
+
+test("navigation presents the approved visible brand", () => {
+  assert.match(nav, /<a className="nav-brand"[^>]*>\s*马毓廷 ✣\s*<\/a>/);
 });
 
 test("public shared shells do not offer a PDF download", () => {
