@@ -73,21 +73,21 @@ describe('ProjectDetailPage', () => {
   it.each(projects)(
     'renders the complete evidence hierarchy for $id',
     (project) => {
-      render(<ProjectDetailPage project={project} />);
+      const { container } = render(<ProjectDetailPage project={project} />);
 
       expect(
         screen.getAllByRole('heading', { level: 1, name: project.title }),
       ).toHaveLength(1);
-      for (const value of [
-        project.audience,
-        project.subtitle,
-        project.metric,
-      ]) {
-        expect(screen.getByText(value)).toBeTruthy();
-      }
-      const tagList = screen.getByRole('list', {
+      const hero = container.querySelector<HTMLElement>('.project-hero')!;
+      expect(within(hero).getByText(`PROJECT / ${project.index}`)).toBeTruthy();
+      for (const value of [project.audience, project.subtitle, project.metric])
+        expect(within(hero).getByText(value)).toBeTruthy();
+      const tagList = within(hero).getByRole('list', {
         name: `${project.title} 标签`,
       });
+      expect(within(tagList).getAllByRole('listitem')).toHaveLength(
+        project.tags.length,
+      );
       for (const tag of project.tags)
         expect(within(tagList).getByText(tag)).toBeTruthy();
 
@@ -108,46 +108,90 @@ describe('ProjectDetailPage', () => {
       }
 
       const overview = document.getElementById('project-overview')!;
-      for (const value of [
-        project.situation,
-        project.task,
-        project.result[0],
-      ]) {
-        expect(within(overview).getByText(value)).toBeTruthy();
+      const overviewGrid = overview.querySelector<HTMLElement>(
+        '.project-overview-grid',
+      )!;
+      const overviewColumns = [...overviewGrid.children] as HTMLElement[];
+      expect(overviewColumns).toHaveLength(3);
+      const overviewValues = [
+        ['问题背景', project.situation],
+        ['产品任务', project.task],
+        ['当前完成度', project.result[0]],
+      ] as const;
+      for (const [index, column] of overviewColumns.entries()) {
+        const [label, value] = overviewValues[index]!;
+        expect(within(column).getByText(label)).toBeTruthy();
+        expect(within(column).getByText(value)).toBeTruthy();
       }
+
       const star = document.getElementById('project-star')!;
-      for (const value of [
-        project.situation,
-        project.task,
-        ...project.actions,
-        ...project.result,
-      ]) {
-        expect(within(star).getByText(value)).toBeTruthy();
+      const starCards = [
+        ...star.querySelectorAll<HTMLElement>('article.project-star-card'),
+      ];
+      expect(starCards).toHaveLength(4);
+      for (const [label, values] of [
+        ['SITUATION', [project.situation]],
+        ['TASK', [project.task]],
+        ['ACTION', project.actions],
+        ['RESULT', project.result],
+      ] as const) {
+        const card = starCards.find((item) => within(item).queryByText(label))!;
+        expect(within(card).getAllByRole('list')).toHaveLength(1);
+        const listItems = within(card)
+          .getAllByRole('listitem')
+          .map((item) => item.textContent);
+        expect(listItems).toHaveLength(values.length);
+        expect(listItems).toEqual(values);
       }
+
       const collaboration = document.getElementById('project-collaboration')!;
-      for (const value of [
-        ...project.humanRole,
-        ...project.agentRole,
-        project.collaborationLoop,
-      ]) {
-        expect(within(collaboration).getByText(value)).toBeTruthy();
+      for (const [heading, values] of [
+        ['我负责', project.humanRole],
+        ['AI Agent 负责', project.agentRole],
+      ] as const) {
+        const article = within(collaboration)
+          .getByRole('heading', { level: 3, name: heading })
+          .closest('article')!;
+        const listItems = within(article)
+          .getAllByRole('listitem')
+          .map((item) => item.textContent);
+        expect(listItems).toHaveLength(values.length);
+        expect(listItems).toEqual(values);
       }
+      const loop = collaboration.querySelector<HTMLElement>('.project-loop')!;
+      expect(within(loop).getByText(project.collaborationLoop)).toBeTruthy();
+
       const decisions = document.getElementById('project-decisions')!;
       expect(
         decisions.querySelectorAll('article.project-challenge'),
       ).toHaveLength(project.challenges.length);
       for (const challenge of project.challenges) {
-        expect(within(decisions).getByText(challenge.title)).toBeTruthy();
-        expect(within(decisions).getByText(challenge.problem)).toBeTruthy();
-        expect(within(decisions).getByText(challenge.solution)).toBeTruthy();
+        const card = within(decisions)
+          .getByRole('heading', { level: 3, name: challenge.title })
+          .closest('article')!;
+        const contentBlocks = [...card.children].filter(
+          (child) => child.tagName === 'DIV',
+        ) as HTMLElement[];
+        expect(contentBlocks).toHaveLength(2);
+        expect(within(contentBlocks[0]).getByText('PROBLEM')).toBeTruthy();
+        expect(
+          within(contentBlocks[0]).getByText(challenge.problem),
+        ).toBeTruthy();
+        expect(within(contentBlocks[1]).getByText('SOLUTION')).toBeTruthy();
+        expect(
+          within(contentBlocks[1]).getByText(challenge.solution),
+        ).toBeTruthy();
       }
+
       const tooling = document.getElementById('project-tooling')!;
       expect(tooling.querySelectorAll('article.project-tool')).toHaveLength(
         project.tools.length,
       );
       for (const tool of project.tools) {
-        expect(within(tooling).getByText(tool.name)).toBeTruthy();
-        expect(within(tooling).getByText(tool.reason)).toBeTruthy();
+        const card = within(tooling)
+          .getByRole('heading', { level: 3, name: tool.name })
+          .closest('article')!;
+        expect(within(card).getByText(tool.reason)).toBeTruthy();
       }
       expect(
         within(document.getElementById('project-boundary')!).getByText(
