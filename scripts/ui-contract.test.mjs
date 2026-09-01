@@ -6,11 +6,13 @@ async function read(path) {
   return readFile(new URL(path, import.meta.url), 'utf8').catch(() => '');
 }
 
-const [css, nav, home, project] = await Promise.all([
+const [css, nav, home, project, hero, videoHook] = await Promise.all([
   read('../site/site.css'),
   read('../components/site/site-nav.tsx'),
   read('../components/site/home-page.tsx'),
   read('../components/site/project-detail-page.tsx'),
+  read('../components/site/interactive-hero.tsx'),
+  read('../hooks/use-background-video.ts'),
 ]);
 
 test('shared page shells include the site navigation and footer', () => {
@@ -71,4 +73,16 @@ test('navigation supports reduced motion and accessible mobile disclosure', () =
   assert.match(nav, /MotionConfig\s+reducedMotion="user"/);
   assert.match(nav, /AnimatePresence/);
   assert.match(nav, /aria-expanded/);
+});
+
+test('interactive hero retains its approved media and sensing copy contracts', () => {
+  assert.match(hero, /hf_20260601_110537/);
+  assert.match(hero, /hero-fallback\.svg/);
+  assert.match(hero, /AI PRODUCT MANAGER · EMBODIED INTELLIGENCE/);
+});
+
+test('background video hook encodes motion-safe responsive scrubbing', () => {
+  assert.match(videoHook, /prefers-reduced-motion/);
+  assert.match(videoHook, /1024/);
+  assert.match(videoHook, /Math\.max\(\s*0,/);
 });
