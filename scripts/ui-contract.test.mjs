@@ -25,6 +25,28 @@ test('shared page shells include the site navigation and footer', () => {
   assert.match(project, /<SiteFooter\s*\/>/);
 });
 
+test('project detail source declares the complete evidence-led case structure', () => {
+  for (const label of [
+    'SITUATION',
+    'TASK',
+    'ACTION',
+    'RESULT',
+    '我负责',
+    'AI Agent 负责',
+    '核心挑战',
+    '工具与模型',
+    '诚实边界',
+  ]) {
+    assert.match(project, new RegExp(label));
+  }
+  assert.match(project, /project\.challenges\.map/);
+  assert.match(project, /projectHref/);
+  assert.match(project, /--project-accent/);
+  assert.match(project, /<SiteNav\s+projectMode\s*\/>/);
+  assert.doesNotMatch(project, /ProjectCaseCard/);
+  assert.doesNotMatch(project, /from\s+['"][^'"]*project-case/);
+});
+
 function hexToRgb(hex) {
   return [0, 2, 4].map((index) =>
     Number.parseInt(hex.slice(index + 1, index + 3), 16),
@@ -170,7 +192,7 @@ test('navigation supports reduced motion and accessible mobile disclosure', () =
     /@media \(max-width: 860px\)[\s\S]*scroll-padding-top:\s*4rem/,
   );
   assert.doesNotMatch(css, /scroll-margin-top/);
-  assert.match(project, /project-detail-content/);
+  assert.match(project, /project-shell/);
   assert.match(nav, /MotionConfig\s+reducedMotion="user"/);
   assert.match(nav, /AnimatePresence/);
   assert.match(nav, /aria-expanded/);

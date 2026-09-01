@@ -56,10 +56,6 @@ button {
   margin-inline: auto;
 }
 
-.project-detail-content {
-  padding-top: 4.75rem;
-}
-
 .section-label {
   margin: 0;
   color: var(--signal);
@@ -230,9 +226,6 @@ button {
   }
   .nav-inner {
     min-height: 4rem;
-  }
-  .project-detail-content {
-    padding-top: 4rem;
   }
   .desktop-nav {
     display: none;
@@ -730,6 +723,337 @@ button {
   transform: translateX(0.3rem);
 }
 
+.project-shell {
+  --signal: var(--project-accent);
+  --signal-soft: color-mix(in srgb, var(--project-accent) 9%, var(--paper));
+}
+
+.project-hero {
+  display: grid;
+  min-height: 78svh;
+  align-items: end;
+  padding-block: calc(4.75rem + 3rem) 5.5rem;
+  border-bottom: 1px solid var(--grid-line);
+}
+
+.project-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.6fr) minmax(0, 2.4fr);
+  gap: clamp(2rem, 6vw, 7rem);
+}
+
+.project-hero-meta {
+  display: grid;
+  align-content: end;
+  gap: 1.25rem;
+}
+
+.project-back-link {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.project-back-link span {
+  color: var(--project-accent);
+  font-size: 1.1rem;
+  transition: transform 180ms var(--ease-field);
+}
+
+.project-back-link:hover span,
+.project-back-link:focus-visible span {
+  transform: translateX(-0.25rem);
+}
+
+.project-audience,
+.project-hero-subtitle,
+.project-hero-metric {
+  margin: 0;
+}
+
+.project-audience {
+  color: var(--project-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.project-hero h1 {
+  max-width: 12ch;
+  margin: 0.7rem 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.7rem, 9vw, 8rem);
+  font-weight: 500;
+  letter-spacing: -0.065em;
+  line-height: 0.88;
+}
+
+.project-hero-subtitle {
+  max-width: 42rem;
+  margin-top: 1.65rem;
+  color: var(--muted-ink);
+  font-size: clamp(1rem, 1.7vw, 1.25rem);
+  line-height: 1.7;
+}
+
+.project-hero-metric {
+  margin-top: 1.5rem;
+  color: var(--project-accent);
+  font-size: 0.92rem;
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.project-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 1.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-tag-list li {
+  padding: 0.35rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--project-accent) 45%, transparent);
+  color: var(--project-accent);
+  font-size: 0.71rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.project-section {
+  padding-block: 7rem;
+}
+
+.project-section .section-heading {
+  padding-top: 0;
+}
+
+.project-overview,
+.project-tooling {
+  background: var(--paper-deep);
+}
+
+.project-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+}
+
+.project-overview-grid > div {
+  padding-top: 1.1rem;
+  border-top: 2px solid var(--project-accent);
+}
+
+.project-overview-grid > div > p:last-child,
+.project-challenge p,
+.project-tool p,
+.project-loop > p:last-child,
+.project-boundary-note p {
+  margin: 0.8rem 0 0;
+  color: var(--muted-ink);
+  font-size: 0.94rem;
+  line-height: 1.75;
+}
+
+.project-content-label,
+.project-story-label {
+  margin: 0;
+  color: var(--project-accent);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+}
+
+.project-star-grid,
+.project-collaboration-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--grid-line);
+  border-left: 1px solid var(--grid-line);
+}
+
+.project-star-card,
+.project-collaboration-grid > article {
+  padding: clamp(1.35rem, 3vw, 2.25rem);
+  border-right: 1px solid var(--grid-line);
+  border-bottom: 1px solid var(--grid-line);
+}
+
+.project-story-label {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.project-story-label span {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: -0.05em;
+}
+
+.project-star-card ul,
+.project-collaboration-grid ul {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1.4rem 0 0;
+  padding: 0;
+  color: var(--muted-ink);
+  font-size: 0.91rem;
+  line-height: 1.7;
+  list-style: none;
+}
+
+.project-star-card li,
+.project-collaboration-grid li {
+  display: grid;
+  grid-template-columns: 0.75rem 1fr;
+  gap: 0.45rem;
+}
+
+.project-star-card li::before,
+.project-collaboration-grid li::before {
+  color: var(--project-accent);
+  content: '✣';
+}
+
+.project-collaboration {
+  background: var(--paper-deep);
+}
+
+.project-collaboration-grid h3,
+.project-challenge h3,
+.project-tool h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.project-loop {
+  margin-top: 1.25rem;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border-top: 2px solid var(--project-accent);
+  border-bottom: 1px solid var(--grid-line);
+}
+
+.project-loop > p:last-child {
+  max-width: 65rem;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 2.4vw, 1.85rem);
+  letter-spacing: -0.035em;
+  line-height: 1.35;
+}
+
+.project-challenge-list {
+  border-bottom: 1px solid var(--grid-line);
+}
+
+.project-challenge {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1rem, 3vw, 3rem);
+  padding-block: 2rem;
+  border-top: 1px solid var(--grid-line);
+}
+
+.project-challenge p,
+.project-tool p {
+  font-size: 0.88rem;
+}
+
+.project-tool-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--grid-line);
+  border-left: 1px solid var(--grid-line);
+}
+
+.project-tool {
+  min-height: 13rem;
+  padding: clamp(1.35rem, 3vw, 2.15rem);
+  border-right: 1px solid var(--grid-line);
+  border-bottom: 1px solid var(--grid-line);
+  background: var(--paper);
+  transition: background 180ms var(--ease-field);
+}
+
+.project-tool:hover,
+.project-tool:focus-within {
+  background: color-mix(in srgb, var(--project-accent) 6%, var(--paper));
+}
+
+.project-boundary {
+  padding-bottom: 4rem;
+}
+
+.project-boundary-note {
+  max-width: 58rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border-top: 2px solid var(--project-accent);
+  border-bottom: 1px solid var(--grid-line);
+  background: var(--paper-deep);
+}
+
+.project-boundary-note p {
+  margin-top: 0;
+  color: var(--ink);
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+}
+
+.project-pagination {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 7rem;
+  border-top: 1px solid var(--grid-line);
+  border-left: 1px solid var(--grid-line);
+}
+
+.project-pagination a {
+  display: grid;
+  min-height: 6.25rem;
+  align-content: center;
+  gap: 0.4rem;
+  padding: 1.2rem clamp(1.2rem, 3vw, 2.25rem);
+  border-right: 1px solid var(--grid-line);
+  border-bottom: 1px solid var(--grid-line);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background 180ms var(--ease-field);
+}
+
+.project-pagination a:hover,
+.project-pagination a:focus-visible {
+  background: color-mix(in srgb, var(--project-accent) 7%, var(--paper));
+}
+
+.project-pagination span {
+  color: var(--project-accent);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+}
+
+.project-pagination strong {
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2vw, 1.6rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
 .education-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -821,6 +1145,31 @@ button {
   .project-card {
     min-height: 20rem;
   }
+  .project-hero {
+    min-height: 66svh;
+    padding-block: calc(4rem + 2.5rem) 4rem;
+  }
+  .project-hero-grid,
+  .project-overview-grid,
+  .project-star-grid,
+  .project-collaboration-grid,
+  .project-challenge,
+  .project-tool-grid,
+  .project-pagination {
+    grid-template-columns: 1fr;
+  }
+  .project-hero-grid {
+    gap: 2rem;
+  }
+  .project-section {
+    padding-block: 5rem;
+  }
+  .project-tool {
+    min-height: 0;
+  }
+  .project-pagination {
+    margin-bottom: 5rem;
+  }
 }
 
 @media (max-width: 560px) {
@@ -854,6 +1203,24 @@ button {
     margin-bottom: 1.5rem;
   }
   .education-grid > div {
+    padding: 1.25rem;
+  }
+  .project-hero {
+    padding-block: calc(4rem + 1.75rem) 3.25rem;
+  }
+  .project-hero h1 {
+    font-size: clamp(3.25rem, 16vw, 5rem);
+  }
+  .project-tag-list {
+    gap: 0.35rem;
+  }
+  .project-section {
+    padding-block: 4rem;
+  }
+  .project-star-card,
+  .project-collaboration-grid > article,
+  .project-tool,
+  .project-pagination a {
     padding: 1.25rem;
   }
 }

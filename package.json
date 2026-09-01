@@ -15,7 +15,7 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run test:content && npm run test:ui",
     "test:content": "node --test scripts/content-contract.test.mjs scripts/resume-content-contract.test.mjs",
-    "test:ui": "node --test scripts/ui-contract.test.mjs && vitest run --config vite.pages.config.ts --environment jsdom scripts/site-nav.test.tsx scripts/interactive-hero.test.tsx scripts/home-page.test.tsx scripts/reveal.test.tsx",
+    "test:ui": "node --test scripts/ui-contract.test.mjs && vitest run --config vite.pages.config.ts --environment jsdom scripts/site-nav.test.tsx scripts/interactive-hero.test.tsx scripts/home-page.test.tsx scripts/project-detail-page.test.tsx scripts/reveal.test.tsx",
     "test:pages-output": "npm run build:pages && node --test scripts/pages-output.test.mjs"
   },
   "dependencies": {
