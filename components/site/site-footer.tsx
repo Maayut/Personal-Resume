@@ -1,7 +1,7 @@
-import { profile } from "@/lib/resume";
+import { profile } from '@/lib/resume';
 
 export function SiteFooter() {
-  const telephone = profile.phone.replaceAll("-", "");
+  const telephone = profile.phone.replaceAll('-', '');
 
   return (
     <footer className="site-footer" id="contact">

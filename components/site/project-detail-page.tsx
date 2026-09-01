@@ -7,7 +7,7 @@ export function ProjectDetailPage({ project }: { project: ProjectCase }) {
   return (
     <main className="site-shell">
       <SiteNav projectMode />
-      <article className="site-container">
+      <article className="site-container project-detail-content">
         <h1>{project.title}</h1>
       </article>
       <SiteFooter />

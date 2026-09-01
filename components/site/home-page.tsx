@@ -1,5 +1,5 @@
-import { SiteFooter } from "@/components/site/site-footer";
-import { SiteNav } from "@/components/site/site-nav";
+import { SiteFooter } from '@/components/site/site-footer';
+import { SiteNav } from '@/components/site/site-nav';
 
 export function HomePage() {
   return (
