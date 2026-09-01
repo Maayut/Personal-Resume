@@ -24,6 +24,29 @@ test('shared page shells include the site navigation and footer', () => {
   assert.match(project, /<SiteFooter\s*\/>/);
 });
 
+test('homepage source declares the recruiter-facing content structure', () => {
+  for (const label of [
+    'HUMAN IN THE LOOP',
+    'FIELD EXPERIENCE',
+    'SELECTED AGENT WORK',
+    'EDUCATION',
+    'CAPABILITY',
+  ]) {
+    assert.match(home, new RegExp(label));
+  }
+  for (const anchor of ['about', 'experience', 'projects', 'education']) {
+    assert.match(home, new RegExp(`id=["']${anchor}["']`));
+  }
+  assert.match(home, /mayuting-portrait\.jpg/);
+  assert.match(home, /experiences\.map/);
+  assert.match(home, /projects\.map/);
+  assert.match(
+    home,
+    /我的实践从智能座舱数据、IoT 商业化延伸到语音 Agent 与具身机器人：先确认人在什么场景下遇到什么阻力，再定义交互策略、协作边界和上线验收。/,
+  );
+  assert.doesNotMatch(home, /真实日志、场景约束和用户反馈/);
+});
+
 test('shared CSS exposes the site design tokens', () => {
   for (const token of [
     '--paper',

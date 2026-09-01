@@ -133,6 +133,52 @@ test('homepage output uses base-prefixed local assets that resolve', () => {
   assertBuiltAssetsResolve(homepage, 'homepage');
 });
 
+test('homepage output exposes the recruiter-facing metadata and case links', () => {
+  const homepage = readBuilt('dist-pages/index.html');
+  const scripts = builtAssetContents(homepage, '.js').join('\n');
+
+  assert.match(homepage, /<title>马毓廷｜AI 产品经理<\/title>/);
+  assert.match(
+    homepage,
+    /content=["']马毓廷的 AI 产品经理个人主页：多模态交互、语音 Agent、AIoT 实习实践与四个 Agent 项目案例。["']/,
+  );
+  assert.match(
+    homepage,
+    /href=["']https:\/\/maayut\.github\.io\/Personal-Resume\/["']/,
+  );
+  assert.match(
+    homepage,
+    /property=["']og:title["'][\s\S]*content=["']马毓廷｜AI 产品经理["']/,
+  );
+  assert.match(
+    homepage,
+    /property=["']og:description["'][\s\S]*content=["']从需求判断、交互策略到现场交付的 AI 产品实践。["']/,
+  );
+  assert.match(
+    homepage,
+    /https:\/\/maayut\.github\.io\/Personal-Resume\/og\.png/,
+  );
+  assert.match(
+    scripts,
+    /我的实践从智能座舱数据、IoT 商业化延伸到语音 Agent 与具身机器人：先确认人在什么场景下遇到什么阻力，再定义交互策略、协作边界和上线验收。/,
+  );
+  for (const project of projects) {
+    assert.match(scripts, new RegExp(`id:["'\\\`]${project.id}["'\\\`]`));
+    assert.equal(
+      `${basePath}projects/${project.id}/`,
+      `/Personal-Resume/projects/${project.id}/`,
+    );
+  }
+  assert.match(scripts, /`\$\{[^}]+\}projects\/\$\{[^}]+\}\//);
+  const portrait = '/Personal-Resume/media/mayuting-portrait.jpg';
+  assert.match(scripts, new RegExp(escapeRegExp(portrait)));
+  assert.ok(fs.existsSync(new URL(builtPublicPath(portrait), distRoot)));
+  assert.doesNotMatch(
+    `${homepage}\n${scripts}`,
+    /下载 PDF|href=["'][^"']+\.pdf/i,
+  );
+});
+
 test('homepage bundle deploys the resume hero through shared site assets', () => {
   const homepage = readBuilt('dist-pages/index.html');
   const scripts = builtAssetContents(homepage, '.js').join('\n');
