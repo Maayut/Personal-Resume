@@ -1,4 +1,5 @@
 import { InteractiveHero } from '@/components/site/interactive-hero';
+import { Reveal } from '@/components/site/reveal';
 import { SectionHeading } from '@/components/site/section-heading';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteNav } from '@/components/site/site-nav';
@@ -13,9 +14,17 @@ import {
 import { projects, type ProjectCase } from '@/lib/projects';
 import { projectHref } from '@/site/routes';
 
-function ExperienceItem({ experience }: { experience: Experience }) {
+function ExperienceItem({
+  experience,
+  delay,
+}: {
+  experience: Experience;
+  delay: number;
+}) {
   return (
-    <article
+    <Reveal
+      as="article"
+      delay={delay}
       className={`experience-item ${
         experience.featured ? 'is-featured' : 'is-compact'
       }`}
@@ -41,13 +50,23 @@ function ExperienceItem({ experience }: { experience: Experience }) {
           <li key={metric}>{metric}</li>
         ))}
       </ul>
-    </article>
+    </Reveal>
   );
 }
 
-function ProjectCard({ project }: { project: ProjectCase }) {
+function ProjectCard({
+  project,
+  delay,
+}: {
+  project: ProjectCase;
+  delay: number;
+}) {
   return (
-    <article className={`project-card project-accent-${project.id}`}>
+    <Reveal
+      as="article"
+      className={`project-card project-accent-${project.id}`}
+      delay={delay}
+    >
       <p className="project-index">PROJECT / {project.index}</p>
       <h3>{project.title}</h3>
       <p className="project-subtitle">{project.subtitle}</p>
@@ -55,7 +74,7 @@ function ProjectCard({ project }: { project: ProjectCase }) {
       <a className="project-link" href={projectHref(project.id)}>
         查看完整案例 <span aria-hidden="true">→</span>
       </a>
-    </article>
+    </Reveal>
   );
 }
 
@@ -64,19 +83,26 @@ export function HomePage() {
     <main className="site-shell">
       <SiteNav />
       <InteractiveHero />
-      <section className="about-section" id="about">
-        <div className="site-container about-grid">
+      <section
+        className="about-section"
+        id="about"
+        aria-labelledby="about-title"
+      >
+        <Reveal className="site-container about-grid">
           <figure className="portrait-frame">
             {/* oxlint-disable-next-line next/no-img-element -- deployed Vite pages use a base-safe public asset. */}
             <img
               src={`${import.meta.env.BASE_URL}media/mayuting-portrait.jpg`}
               alt="马毓廷个人照片"
+              loading="lazy"
+              decoding="async"
             />
           </figure>
           <div className="about-copy">
             <SectionHeading
               label="00 / HUMAN IN THE LOOP"
               title="把技术能力组织成可被使用的产品"
+              id="about-title"
             />
             <p className="about-introduction">
               {
@@ -98,44 +124,64 @@ export function HomePage() {
               </div>
             </dl>
           </div>
-        </div>
+        </Reveal>
       </section>
-      <section className="experience-section" id="experience">
-        <div className="site-container">
+      <section
+        className="experience-section"
+        id="experience"
+        aria-labelledby="experience-title"
+      >
+        <Reveal className="site-container">
           <SectionHeading
             label="01 / FIELD EXPERIENCE"
             title="从需求判断到现场交付"
+            id="experience-title"
             note="三段重点经历展开产品对象、关键行动与对应结果；早期数据产品经历以摘要保留。"
           />
           <div className="experience-list">
-            {experiences.map((experience) => (
+            {experiences.map((experience, index) => (
               <ExperienceItem
                 key={experience.company}
                 experience={experience}
+                delay={index * 0.04}
               />
             ))}
           </div>
-        </div>
+        </Reveal>
       </section>
-      <section className="projects-section" id="projects">
-        <div className="site-container">
+      <section
+        className="projects-section"
+        id="projects"
+        aria-labelledby="projects-title"
+      >
+        <Reveal className="site-container">
           <SectionHeading
             label="02 / SELECTED AGENT WORK"
             title="我与 Agent 共同完成的产品"
+            id="projects-title"
             note="每个案例都保留问题判断、人机分工、关键转折、验证结果与诚实边界。"
           />
           <div className="project-grid">
-            {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+            {projects.map((project, index) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+                delay={index * 0.04}
+              />
             ))}
           </div>
-        </div>
+        </Reveal>
       </section>
-      <section className="education-section" id="education">
-        <div className="site-container">
+      <section
+        className="education-section"
+        id="education"
+        aria-labelledby="education-title"
+      >
+        <Reveal className="site-container">
           <SectionHeading
             label="03 / EDUCATION & CAPABILITY"
             title="研究、产品与工程之间"
+            id="education-title"
           />
           <div className="education-grid">
             <div className="education-column">
@@ -170,7 +216,7 @@ export function HomePage() {
               </ul>
             </div>
           </div>
-        </div>
+        </Reveal>
       </section>
       <SiteFooter />
     </main>

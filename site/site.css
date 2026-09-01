@@ -669,16 +669,16 @@ button {
 }
 
 .project-accent-compliance {
-  --project-card-accent: #50705a;
+  --project-card-accent: #1f5f3a;
 }
 .project-accent-mock-interview {
-  --project-card-accent: #687a58;
+  --project-card-accent: #9c3b00;
 }
 .project-accent-career-pathfinder {
-  --project-card-accent: #797050;
+  --project-card-accent: #69408d;
 }
 .project-accent-resume-autofill {
-  --project-card-accent: #4b716f;
+  --project-card-accent: #195d91;
 }
 
 .project-index {

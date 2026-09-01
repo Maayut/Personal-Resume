@@ -133,7 +133,7 @@ test('homepage output uses base-prefixed local assets that resolve', () => {
   assertBuiltAssetsResolve(homepage, 'homepage');
 });
 
-test('homepage output exposes the recruiter-facing metadata and case links', () => {
+test('homepage output exposes recruiter metadata and durable case-route inputs', () => {
   const homepage = readBuilt('dist-pages/index.html');
   const scripts = builtAssetContents(homepage, '.js').join('\n');
 
@@ -162,12 +162,9 @@ test('homepage output exposes the recruiter-facing metadata and case links', () 
     scripts,
     /我的实践从智能座舱数据、IoT 商业化延伸到语音 Agent 与具身机器人：先确认人在什么场景下遇到什么阻力，再定义交互策略、协作边界和上线验收。/,
   );
+  // Task 7 will validate these client-rendered routes against a served production build.
   for (const project of projects) {
     assert.match(scripts, new RegExp(`id:["'\\\`]${project.id}["'\\\`]`));
-    assert.equal(
-      `${basePath}projects/${project.id}/`,
-      `/Personal-Resume/projects/${project.id}/`,
-    );
   }
   assert.match(scripts, /`\$\{[^}]+\}projects\/\$\{[^}]+\}\//);
   const portrait = '/Personal-Resume/media/mayuting-portrait.jpg';

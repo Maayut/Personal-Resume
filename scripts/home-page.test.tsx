@@ -24,9 +24,29 @@ function installMediaQueries() {
   })) as unknown as typeof window.matchMedia;
 }
 
+function installIntersectionObserver() {
+  class TestIntersectionObserver {
+    root = null;
+    rootMargin = '';
+    thresholds = [];
+
+    constructor(_callback: IntersectionObserverCallback) {}
+
+    disconnect() {}
+    observe() {}
+    takeRecords() {
+      return [];
+    }
+    unobserve() {}
+  }
+
+  vi.stubGlobal('IntersectionObserver', TestIntersectionObserver);
+}
+
 describe('HomePage', () => {
   beforeEach(() => {
     installMediaQueries();
+    installIntersectionObserver();
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(
       () => undefined,
     );
@@ -36,6 +56,7 @@ describe('HomePage', () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('renders one accessible base-safe portrait', () => {
@@ -48,6 +69,47 @@ describe('HomePage', () => {
     expect(portrait.getAttribute('src')).toMatch(
       /(?:\/Personal-Resume)?\/media\/mayuting-portrait\.jpg$/,
     );
+    expect(portrait.getAttribute('loading')).toBe('lazy');
+    expect(portrait.getAttribute('decoding')).toBe('async');
+  });
+
+  it('uses a single headline hierarchy and labels every editorial section', () => {
+    render(<HomePage />);
+
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(
+      screen.getByRole('heading', {
+        level: 1,
+        name: '让 AI 从能力走向真实交互',
+      }),
+    ).toBeTruthy();
+    for (const [sectionId, heading] of [
+      ['about', '把技术能力组织成可被使用的产品'],
+      ['experience', '从需求判断到现场交付'],
+      ['projects', '我与 Agent 共同完成的产品'],
+      ['education', '研究、产品与工程之间'],
+    ]) {
+      const section = document.getElementById(sectionId)!;
+      expect(section.getAttribute('aria-labelledby')).toBe(
+        `${sectionId}-title`,
+      );
+      expect(
+        within(section).getByRole('heading', { level: 2, name: heading }).id,
+      ).toBe(`${sectionId}-title`);
+    }
+    expect(screen.getAllByRole('heading', { level: 3 })).toHaveLength(8);
+  });
+
+  it('reveals the editorial content blocks and case units without changing semantic cards', () => {
+    render(<HomePage />);
+
+    expect(document.querySelectorAll('[data-reveal]')).toHaveLength(12);
+    expect(
+      document.querySelectorAll('article.experience-item[data-reveal]'),
+    ).toHaveLength(4);
+    expect(
+      document.querySelectorAll('article.project-card[data-reveal]'),
+    ).toHaveLength(4);
   });
 
   it('keeps results and highlights inside their experience articles', () => {
