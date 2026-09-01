@@ -6,17 +6,69 @@ import { InteractiveHero } from '@/components/site/interactive-hero';
 import { useBackgroundVideo } from '@/hooks/use-background-video';
 import { useTypewriter } from '@/hooks/use-typewriter';
 
-function installMediaQuery(reducedMotion = false) {
-  window.matchMedia = vi.fn((query: string) => ({
-    matches: query === '(prefers-reduced-motion: reduce)' && reducedMotion,
-    media: query,
-    onchange: null,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })) as unknown as typeof window.matchMedia;
+type MediaListener = (event: MediaQueryListEvent) => void;
+
+function installMediaQuery(
+  initialReducedMotion = false,
+  initialDesktop = true,
+) {
+  let reducedMotion = initialReducedMotion;
+  let desktop = initialDesktop;
+  const listeners = new Map<string, Set<MediaListener>>();
+
+  const matches = (query: string) => {
+    if (query === '(prefers-reduced-motion: reduce)') return reducedMotion;
+    if (query === '(min-width: 1024px)') return desktop;
+    return false;
+  };
+
+  const notify = (query: string) => {
+    for (const listener of listeners.get(query) ?? []) {
+      listener({
+        matches: matches(query),
+        media: query,
+      } as MediaQueryListEvent);
+    }
+  };
+
+  Object.defineProperty(window, 'innerWidth', {
+    configurable: true,
+    value: desktop ? 1280 : 800,
+  });
+  window.matchMedia = vi.fn((query: string) => {
+    const queryListeners = listeners.get(query) ?? new Set<MediaListener>();
+    listeners.set(query, queryListeners);
+    return {
+      media: query,
+      onchange: null,
+      get matches() {
+        return matches(query);
+      },
+      addEventListener: (_type: 'change', listener: MediaListener) =>
+        queryListeners.add(listener),
+      removeEventListener: (_type: 'change', listener: MediaListener) =>
+        queryListeners.delete(listener),
+      addListener: (listener: MediaListener) => queryListeners.add(listener),
+      removeListener: (listener: MediaListener) =>
+        queryListeners.delete(listener),
+      dispatchEvent: () => true,
+    } as unknown as MediaQueryList;
+  });
+
+  return {
+    setReducedMotion(value: boolean) {
+      reducedMotion = value;
+      notify('(prefers-reduced-motion: reduce)');
+    },
+    setDesktop(value: boolean) {
+      desktop = value;
+      Object.defineProperty(window, 'innerWidth', {
+        configurable: true,
+        value: desktop ? 1280 : 800,
+      });
+      notify('(min-width: 1024px)');
+    },
+  };
 }
 
 function TypewriterProbe({
@@ -131,6 +183,61 @@ describe('useTypewriter', () => {
     expect(screen.getByRole('status').textContent).toBe('stopped');
     expect(vi.getTimerCount()).toBe(0);
   });
+
+  it('restarts after nonempty, empty, then the original text', () => {
+    installMediaQuery(false);
+    const { rerender } = render(
+      <TypewriterProbe text="OK" speed={10} delay={20} />,
+    );
+
+    void act(() => vi.advanceTimersByTime(40));
+    expect(screen.getByRole('status').textContent).toBe('OK');
+    rerender(<TypewriterProbe text="" speed={10} delay={20} />);
+    expect(screen.getByRole('status').textContent).toBe('');
+    expect(screen.getByRole('status').getAttribute('data-done')).toBe('true');
+    rerender(<TypewriterProbe text="OK" speed={10} delay={20} />);
+    expect(screen.getByRole('status').textContent).toBe('');
+    expect(screen.getByRole('status').getAttribute('data-done')).toBe('false');
+    void act(() => vi.advanceTimersByTime(30));
+    expect(screen.getByRole('status').textContent).toBe('O');
+    void act(() => vi.advanceTimersByTime(10));
+    expect(screen.getByRole('status').textContent).toBe('OK');
+  });
+
+  it('switches live reduced motion between complete and fresh delayed typing', () => {
+    const media = installMediaQuery(false);
+    render(<TypewriterProbe text="LIVE" speed={10} delay={20} />);
+
+    act(() => media.setReducedMotion(true));
+    expect(screen.getByRole('status').textContent).toBe('LIVE');
+    expect(screen.getByRole('status').getAttribute('data-done')).toBe('true');
+    act(() => media.setReducedMotion(false));
+    expect(screen.getByRole('status').textContent).toBe('');
+    expect(screen.getByRole('status').getAttribute('data-done')).toBe('false');
+    void act(() => vi.advanceTimersByTime(29));
+    expect(screen.getByRole('status').textContent).toBe('');
+    void act(() => vi.advanceTimersByTime(1));
+    expect(screen.getByRole('status').textContent).toBe('L');
+  });
+
+  it('cleans timers before delay and during active typing', () => {
+    installMediaQuery(false);
+    const beforeDelay = render(
+      <TypewriterProbe text="LATE" speed={10} delay={40} />,
+    );
+    expect(vi.getTimerCount()).toBe(1);
+    beforeDelay.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+
+    const duringTyping = render(
+      <TypewriterProbe text="ACTIVE" speed={10} delay={20} />,
+    );
+    void act(() => vi.advanceTimersByTime(30));
+    expect(screen.getByRole('status').textContent).toBe('A');
+    expect(vi.getTimerCount()).toBe(1);
+    duringTyping.unmount();
+    expect(vi.getTimerCount()).toBe(0);
+  });
 });
 
 describe('useBackgroundVideo', () => {
@@ -174,11 +281,7 @@ describe('useBackgroundVideo', () => {
   });
 
   it('attempts muted inline mobile playback and ignores a rejected promise', async () => {
-    installMediaQuery(false);
-    Object.defineProperty(window, 'innerWidth', {
-      configurable: true,
-      value: 800,
-    });
+    installMediaQuery(false, false);
     play.mockImplementation(() => Promise.reject(new Error('blocked')));
     let video!: HTMLVideoElement;
     render(
@@ -227,6 +330,74 @@ describe('useBackgroundVideo', () => {
     );
     expect(video.currentTime).toBe(5);
   });
+
+  it('reapplies scrub and playback exactly once across live desktop changes', () => {
+    const media = installMediaQuery(false, true);
+    let video!: HTMLVideoElement;
+    render(
+      <VideoProbe
+        onReady={(node) => {
+          video = node;
+        }}
+      />,
+    );
+    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
+    video.currentTime = 0;
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 0 })),
+    );
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
+    );
+    expect(video.currentTime).toBe(4);
+
+    act(() => media.setDesktop(false));
+    expect(play).toHaveBeenCalledTimes(1);
+    video.currentTime = 0;
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
+    );
+    expect(video.currentTime).toBe(0);
+
+    act(() => media.setDesktop(true));
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 0 })),
+    );
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
+    );
+    expect(video.currentTime).toBe(4);
+  });
+
+  it('pauses, resets, and restores desktop scrubbing across live reduced motion', () => {
+    const media = installMediaQuery(false, true);
+    let video!: HTMLVideoElement;
+    render(
+      <VideoProbe
+        onReady={(node) => {
+          video = node;
+        }}
+      />,
+    );
+    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
+    video.currentTime = 3;
+    act(() => media.setReducedMotion(true));
+    expect(pause).toHaveBeenCalled();
+    expect(video.currentTime).toBe(0);
+    video.currentTime = 2;
+    void act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    expect(video.currentTime).toBe(0);
+
+    act(() => media.setReducedMotion(false));
+    video.currentTime = 0;
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 0 })),
+    );
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
+    );
+    expect(video.currentTime).toBe(4);
+  });
 });
 
 describe('InteractiveHero', () => {
@@ -240,6 +411,9 @@ describe('InteractiveHero', () => {
       screen.getByText('AI PRODUCT MANAGER · EMBODIED INTELLIGENCE'),
     ).toBeTruthy();
     expect(screen.getByRole('heading')).toBeTruthy();
+    expect(screen.getByRole('heading').getAttribute('aria-label')).toBe(
+      '让 AI 从能力走向真实交互',
+    );
     const video = document.querySelector('video')!;
     expect(video.getAttribute('poster')).toContain('media/hero-fallback.svg');
     expect(video.querySelector('source')?.src).toContain('hf_20260601_110537');

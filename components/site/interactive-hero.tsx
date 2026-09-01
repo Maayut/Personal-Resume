@@ -36,8 +36,8 @@ export function InteractiveHero() {
           <p className="section-label">
             AI PRODUCT MANAGER · EMBODIED INTELLIGENCE
           </p>
-          <h1>
-            {displayed}
+          <h1 aria-label={profile.headline}>
+            <span aria-hidden="true">{displayed}</span>
             <span
               className={`typewriter-cursor${done ? ' is-complete' : ''}`}
               aria-hidden="true"

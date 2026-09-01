@@ -1,31 +1,44 @@
 import { useEffect, useState } from 'react';
 
+import { useMediaQuery } from '@/hooks/use-media-query';
+
 type TypewriterState = {
-  text: string;
-  speed: number;
-  delay: number;
+  runId: string;
   displayed: string;
   done: boolean;
 };
 
-function reducedMotionIsPreferred() {
-  return (
-    typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  );
+function createRunId(
+  text: string,
+  speed: number,
+  delay: number,
+  reducedMotion: boolean,
+) {
+  return `${text}\u0000${speed}\u0000${delay}\u0000${reducedMotion}`;
+}
+
+function createState(
+  runId: string,
+  text: string,
+  reducedMotion: boolean,
+): TypewriterState {
+  return {
+    runId,
+    displayed: reducedMotion ? text : '',
+    done: reducedMotion || text.length === 0,
+  };
 }
 
 export function useTypewriter(text: string, speed = 42, delay = 450) {
-  const reducedMotion = reducedMotionIsPreferred();
-  const [state, setState] = useState<TypewriterState>(() => ({
-    text,
-    speed,
-    delay,
-    displayed: reducedMotion ? text : '',
-    done: reducedMotion || text.length === 0,
-  }));
-  const inputsChanged =
-    state.text !== text || state.speed !== speed || state.delay !== delay;
+  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const runId = createRunId(text, speed, delay, reducedMotion);
+  const [state, setState] = useState<TypewriterState>(() =>
+    createState(runId, text, reducedMotion),
+  );
+
+  if (state.runId !== runId) {
+    setState(createState(runId, text, reducedMotion));
+  }
 
   useEffect(() => {
     if (reducedMotion || text.length === 0) return;
@@ -36,12 +49,13 @@ export function useTypewriter(text: string, speed = 42, delay = 450) {
       intervalId = window.setInterval(() => {
         position += 1;
         const complete = position >= text.length;
-        setState({
-          text,
-          speed,
-          delay,
-          displayed: text.slice(0, position),
-          done: complete,
+        setState((current) => {
+          if (current.runId !== runId) return current;
+          return {
+            runId,
+            displayed: text.slice(0, position),
+            done: complete,
+          };
         });
 
         if (complete) window.clearInterval(intervalId);
@@ -52,18 +66,7 @@ export function useTypewriter(text: string, speed = 42, delay = 450) {
       window.clearTimeout(delayId);
       if (intervalId) window.clearInterval(intervalId);
     };
-  }, [delay, reducedMotion, speed, text]);
-
-  if (reducedMotion || text.length === 0) {
-    return { displayed: text, done: true };
-  }
-
-  if (inputsChanged) {
-    return {
-      displayed: '',
-      done: false,
-    };
-  }
+  }, [delay, reducedMotion, runId, speed, text]);
 
   return { displayed: state.displayed, done: state.done };
 }

@@ -79,6 +79,15 @@ function assertBuiltAssetsResolve(html, pageLabel) {
   }
 }
 
+function builtAssetContents(html, extension) {
+  return localUrls(html)
+    .filter((url) => url.split(/[?#]/, 1)[0].endsWith(extension))
+    .map((url) => {
+      const relativePath = url.slice(basePath.length).split(/[?#]/, 1)[0];
+      return readBuilt(`dist-pages/${relativePath}`);
+    });
+}
+
 test('every project source and built page preserves its route contract', () => {
   for (const project of projects) {
     const source = read(`${project.route}index.html`);
@@ -117,6 +126,22 @@ test('homepage output uses base-prefixed local assets that resolve', () => {
   const homepage = readBuilt('dist-pages/index.html');
 
   assertBuiltAssetsResolve(homepage, 'homepage');
+});
+
+test('homepage bundle deploys the resume hero through shared site assets', () => {
+  const homepage = readBuilt('dist-pages/index.html');
+  const scripts = builtAssetContents(homepage, '.js').join('\n');
+  const styles = builtAssetContents(homepage, '.css').join('\n');
+
+  assert.match(homepage, /\/assets\/site-[^"']+\.css/);
+  assert.match(homepage, /\/assets\/site-[^"']+\.js/);
+  assert.match(scripts, /AI PRODUCT MANAGER · EMBODIED INTELLIGENCE/);
+  assert.match(scripts, /hf_20260601_110537/);
+  assert.match(styles, /\/Personal-Resume\/media\/hero-fallback\.svg/);
+  assert.doesNotMatch(
+    `${homepage}\n${scripts}`,
+    /AI Agent 项目案例集|四个真实 Agent 项目/,
+  );
 });
 
 test('route helpers preserve the configured base path and URL shapes', () => {

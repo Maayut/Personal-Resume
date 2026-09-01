@@ -268,8 +268,7 @@ button {
   align-items: center;
   overflow: hidden;
   padding-block: calc(4.75rem + 4rem) 5rem;
-  background: var(--paper-deep) url('/Personal-Resume/media/hero-fallback.svg')
-    center / cover;
+  background: var(--paper-deep) url('/media/hero-fallback.svg') center / cover;
 }
 
 .hero-video {
@@ -417,7 +416,7 @@ button {
     grid-row: 2;
     width: 100%;
     aspect-ratio: 4 / 3;
-    background: url('/Personal-Resume/media/hero-fallback.svg') center / cover;
+    background: url('/media/hero-fallback.svg') center / cover;
     content: '';
   }
   .hero-scrub-hint {

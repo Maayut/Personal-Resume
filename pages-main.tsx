@@ -1,20 +1,17 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
 
-import Home from "@/app/page";
-import "@/app/globals.css";
-import { installMotionEnhancements } from "@/components/motion-enhancer";
+import { HomePage } from '@/components/site/home-page';
+import '@/site/site.css';
 
-const root = document.getElementById("root");
+const root = document.getElementById('root');
 
 if (!root) {
-  throw new Error("Missing #root element");
+  throw new Error('Missing #root element');
 }
 
 createRoot(root).render(
   <StrictMode>
-    <Home />
+    <HomePage />
   </StrictMode>,
 );
-
-requestAnimationFrame(() => installMotionEnhancements());
