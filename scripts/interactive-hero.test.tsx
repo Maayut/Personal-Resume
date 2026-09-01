@@ -410,10 +410,9 @@ describe('InteractiveHero', () => {
     expect(
       screen.getByText('AI PRODUCT MANAGER · EMBODIED INTELLIGENCE'),
     ).toBeTruthy();
-    expect(screen.getByRole('heading')).toBeTruthy();
-    expect(screen.getByRole('heading').getAttribute('aria-label')).toBe(
-      '让 AI 从能力走向真实交互',
-    );
+    expect(
+      screen.getByRole('heading', { name: '让 AI 从能力走向真实交互' }),
+    ).toBeTruthy();
     const video = document.querySelector('video')!;
     expect(video.getAttribute('poster')).toContain('media/hero-fallback.svg');
     expect(video.querySelector('source')?.src).toContain('hf_20260601_110537');

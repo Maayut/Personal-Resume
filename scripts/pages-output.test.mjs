@@ -88,6 +88,11 @@ function builtAssetContents(html, extension) {
     });
 }
 
+function builtPublicPath(url) {
+  assert.ok(url.startsWith(basePath), `expected base-prefixed URL: ${url}`);
+  return url.slice(basePath.length).split(/[?#]/, 1)[0];
+}
+
 test('every project source and built page preserves its route contract', () => {
   for (const project of projects) {
     const source = read(`${project.route}index.html`);
@@ -132,12 +137,17 @@ test('homepage bundle deploys the resume hero through shared site assets', () =>
   const homepage = readBuilt('dist-pages/index.html');
   const scripts = builtAssetContents(homepage, '.js').join('\n');
   const styles = builtAssetContents(homepage, '.css').join('\n');
+  const fallbackUrl = styles.match(
+    /url\(["']?(\/Personal-Resume\/media\/hero-fallback\.svg)["']?\)/,
+  )?.[1];
 
-  assert.match(homepage, /\/assets\/site-[^"']+\.css/);
-  assert.match(homepage, /\/assets\/site-[^"']+\.js/);
   assert.match(scripts, /AI PRODUCT MANAGER · EMBODIED INTELLIGENCE/);
   assert.match(scripts, /hf_20260601_110537/);
-  assert.match(styles, /\/Personal-Resume\/media\/hero-fallback\.svg/);
+  assert.ok(fallbackUrl, 'homepage CSS should include the fallback URL');
+  assert.ok(
+    fs.existsSync(new URL(builtPublicPath(fallbackUrl), distRoot)),
+    `fallback asset should exist: ${fallbackUrl}`,
+  );
   assert.doesNotMatch(
     `${homepage}\n${scripts}`,
     /AI Agent 项目案例集|四个真实 Agent 项目/,
