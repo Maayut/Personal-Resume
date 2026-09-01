@@ -26,8 +26,8 @@ export function installMotionEnhancements() {
     updateScrollProgress();
     window.addEventListener('scroll', updateScrollProgress, { passive: true });
 
-    document.querySelectorAll('[data-spotlight]').forEach((surface) => {
-      surface.addEventListener('pointermove', (event) => {
+    document.querySelectorAll<HTMLElement>('[data-spotlight]').forEach((surface) => {
+      surface.addEventListener('pointermove', (event: PointerEvent) => {
         const rect = surface.getBoundingClientRect();
         surface.style.setProperty('--pointer-x', ((event.clientX - rect.left) / rect.width * 100) + '%');
         surface.style.setProperty('--pointer-y', ((event.clientY - rect.top) / rect.height * 100) + '%');
