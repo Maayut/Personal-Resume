@@ -62,7 +62,11 @@ test('public shared shells do not offer a PDF download', () => {
 test('navigation supports reduced motion and accessible mobile disclosure', () => {
   assert.match(css, /prefers-reduced-motion/);
   assert.match(css, /scroll-padding-top:\s*4\.75rem/);
-  assert.match(css, /scroll-margin-top:\s*4\.75rem/);
+  assert.match(
+    css,
+    /@media \(max-width: 860px\)[\s\S]*scroll-padding-top:\s*4rem/,
+  );
+  assert.doesNotMatch(css, /scroll-margin-top/);
   assert.match(project, /project-detail-content/);
   assert.match(nav, /MotionConfig\s+reducedMotion="user"/);
   assert.match(nav, /AnimatePresence/);

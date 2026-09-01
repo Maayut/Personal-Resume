@@ -51,10 +51,6 @@ button {
   overflow: clip;
 }
 
-:where(section[id], footer[id], [data-scroll-target]) {
-  scroll-margin-top: 4.75rem;
-}
-
 .site-container {
   width: min(100% - 3rem, 78rem);
   margin-inline: auto;
@@ -224,9 +220,6 @@ button {
 @media (max-width: 860px) {
   html {
     scroll-padding-top: 4rem;
-  }
-  :where(section[id], footer[id], [data-scroll-target]) {
-    scroll-margin-top: 4rem;
   }
   .site-container {
     width: min(100% - 2rem, 78rem);

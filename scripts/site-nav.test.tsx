@@ -154,6 +154,17 @@ describe('SiteNav', () => {
     expect(document.activeElement).not.toBe(trigger);
   });
 
+  it('settles the full-motion menu at its unshifted endpoint', async () => {
+    render(<SiteNav />);
+
+    const { menu } = await openMenu();
+
+    expect(menu.getAttribute('data-motion-mode')).toBe('full');
+    await waitFor(() =>
+      expect(menu.style.transform).not.toContain('translateY(-12px)'),
+    );
+  });
+
   it('respects reduced motion while keeping the mobile menu available', async () => {
     media.setReducedMotion(true);
     render(<SiteNav />);

@@ -128,7 +128,7 @@ export function SiteNav({ projectMode = false }: { projectMode?: boolean }) {
             aria-label="移动导航"
             data-motion-mode={reducedMotion ? 'reduced' : 'full'}
             initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -12 }}
-            animate={{ opacity: 1 }}
+            animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -12 }}
             onKeyDown={trapMenuFocus}
           >
