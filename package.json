@@ -12,7 +12,7 @@
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
     "format": "oxfmt",
-    "test:content": "node --test scripts/content-contract.test.mjs",
+    "test:content": "node --test scripts/content-contract.test.mjs scripts/resume-content-contract.test.mjs",
     "test:ui": "node --test scripts/ui-contract.test.mjs"
   },
   "dependencies": {

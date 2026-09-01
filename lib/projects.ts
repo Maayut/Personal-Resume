@@ -3,6 +3,12 @@ export type ToolChoice = {
   reason: string;
 };
 
+export type ProjectChallenge = {
+  title: string;
+  problem: string;
+  solution: string;
+};
+
 export type ProjectCase = {
   id:
     | "compliance"
@@ -24,6 +30,7 @@ export type ProjectCase = {
   collaborationLoop: string;
   tools: ToolChoice[];
   boundary: string;
+  challenges: ProjectChallenge[];
 };
 
 export const projects: ProjectCase[] = [
@@ -39,6 +46,18 @@ export const projects: ProjectCase[] = [
       "企业制度、合同和访谈材料分散，人工审查慢，生成式结论又容易缺少法律依据与过程证据。",
     task:
       "定义从企业建档、材料上传、风险分级到整改报告的业务闭环，并让每条风险能够回查知识库来源。",
+    challenges: [
+      {
+        title: "首轮真实材料未识别风险",
+        problem: "26 份企业材料跑通后 risk_count 为 0，结果与业务常识不符。",
+        solution: "将异常固化为失败测试，补充劳动合规种子规则后复测识别出 2 项风险。",
+      },
+      {
+        title: "生成结论缺少证据链",
+        problem: "单纯依赖模型结论无法满足 HR 与法务的复核需求。",
+        solution: "通过 WeKnora RAG 返回知识片段，并写入风险依据和报告溯源字段。",
+      },
+    ],
     actions: [
       "先审核 Agent 工作计划，再明确 UI 对齐、后端边界和验收要求。",
       "通过 HTTP 复用 WeKnora RAG，将知识片段写入风险依据和报告溯源。",
@@ -94,6 +113,18 @@ export const projects: ProjectCase[] = [
       "传统题库式模拟面试与候选人简历脱节，RAG 生硬抽题，难以形成真实、连续的追问体验。",
     task:
       "建立从面经采集、结构化、检索到语音面试的完整链路，并让系统根据简历、回答和阶段状态动态追问。",
+    challenges: [
+      {
+        title: "知识库抽题破坏面试连续性",
+        problem: "早期方案让 RAG 直接决定问题，真实试用中追问与候选人简历和回答脱节。",
+        solution: "把知识库降为流程与风格证据，以简历、当前回答和面试阶段驱动 LangGraph 状态机。",
+      },
+      {
+        title: "语音链路同时受延迟与稳定性影响",
+        problem: "代理、预热、锁竞争、浏览器播放和静音会叠加放大等待时间。",
+        solution: "逐层记录耗时并修复并发与播放问题，用 238 项测试保护回归。",
+      },
+    ],
     actions: [
       "真实试用后推翻“知识库直接决定问题”的早期方向。",
       "将知识库降为流程与风格证据，重写简历中心的阶段状态机。",
@@ -153,6 +184,18 @@ export const projects: ProjectCase[] = [
       "职业推荐容易过早下结论、使用人格标签和伪精确分数，也常把制度事实与个人体验混为一谈。",
     task:
       "设计一个在证据不足时持续追问、能呈现反证与不确定性、并给出可逆验证实验的职业决策 Agent。",
+    challenges: [
+      {
+        title: "推荐系统过早给出伪精确结论",
+        problem: "基线会使用人格标签、分数和默认大厂更优等捷径掩盖证据不足。",
+        solution: "改用连续维度、行为证据与置信度，并在证据不足时强制继续追问。",
+      },
+      {
+        title: "制度事实与个人体验混为一谈",
+        problem: "职业建议若不区分证据类型，用户无法判断结论能否迁移到自己。",
+        solution: "建立官方制度事实与从业者体验双轨证据，并要求输出反证和可逆验证实验。",
+      },
+    ],
     actions: [
       "把画像改为连续维度、行为证据和置信度，不使用 MBTI 式标签。",
       "建立官方制度事实与从业者体验双轨证据。",
@@ -208,6 +251,18 @@ export const projects: ProjectCase[] = [
       "个人秋招期间需要在不同公司网申系统反复录入姓名、教育、实习和项目经历；字段命名与控件实现各不相同，手工复制不仅耗时，也容易漏填和错填。",
     task:
       "从自己的投递流程出发调研招聘页面的表单差异，借助 AI Agent 设计并实现自动填写与投递留痕工具，同时坚持资料本地保存和人工最终提交。",
+    challenges: [
+      {
+        title: "同一字段在不同网申系统中实现不同",
+        problem: "原生 input、React/Vue 受控组件和动态表单不能只靠赋值完成填写。",
+        solution: "组合语义分类、原生 setter、事件触发与动态重扫，并对未知控件安全降级。",
+      },
+      {
+        title: "效率提升不能牺牲投递安全",
+        problem: "自动提交、云端保存资料或重复留痕都可能带来不可逆风险。",
+        solution: "坚持本地存储、人工终审、零自动提交，并用 Chrome E2E 验证边界。",
+      },
+    ],
     actions: [
       "记录个人投递中重复出现的资料类型、字段差异和失败场景，确定自动填表、人工终审与投递留痕三项核心需求。",
       "与 Agent 共同调研原生表单及 React/Vue 受控组件机制，设计本地确定性字段分类器和安全降级策略。",
