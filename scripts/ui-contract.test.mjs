@@ -6,14 +6,16 @@ async function read(path) {
   return readFile(new URL(path, import.meta.url), 'utf8').catch(() => '');
 }
 
-const [css, nav, home, project, hero, videoHook] = await Promise.all([
-  read('../site/site.css'),
-  read('../components/site/site-nav.tsx'),
-  read('../components/site/home-page.tsx'),
-  read('../components/site/project-detail-page.tsx'),
-  read('../components/site/interactive-hero.tsx'),
-  read('../hooks/use-background-video.ts'),
-]);
+const [css, nav, home, project, hero, videoHook, heroFallback] =
+  await Promise.all([
+    read('../site/site.css'),
+    read('../components/site/site-nav.tsx'),
+    read('../components/site/home-page.tsx'),
+    read('../components/site/project-detail-page.tsx'),
+    read('../components/site/interactive-hero.tsx'),
+    read('../hooks/use-background-video.ts'),
+    read('../public/media/hero-fallback.svg'),
+  ]);
 
 test('shared page shells include the site navigation and footer', () => {
   assert.match(home, /<SiteNav\s*\/>/);
@@ -79,6 +81,13 @@ test('interactive hero retains its approved media and sensing copy contracts', (
   assert.match(hero, /hf_20260601_110537/);
   assert.match(hero, /hero-fallback\.svg/);
   assert.match(hero, /AI PRODUCT MANAGER · EMBODIED INTELLIGENCE/);
+});
+
+test('hero fallback SVG is purely decorative without textual metadata', () => {
+  assert.match(heroFallback, /aria-hidden="true"/);
+  assert.match(heroFallback, /focusable="false"/);
+  assert.doesNotMatch(heroFallback, /<(?:text|title|desc)\b/i);
+  assert.doesNotMatch(heroFallback, /aria-label/i);
 });
 
 test('background video hook encodes motion-safe responsive scrubbing', () => {

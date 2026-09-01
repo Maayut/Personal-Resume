@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useEffect } from 'react';
+import { StrictMode, useEffect } from 'react';
 
 import { InteractiveHero } from '@/components/site/interactive-hero';
 import { useBackgroundVideo } from '@/hooks/use-background-video';
@@ -83,6 +83,53 @@ describe('useTypewriter', () => {
 
     unmount();
     expect(clearInterval).toHaveBeenCalled();
+  });
+
+  it('keeps one correct progression when StrictMode replays effects', () => {
+    installMediaQuery(false);
+    render(
+      <StrictMode>
+        <TypewriterProbe text="MAP" speed={20} delay={30} />
+      </StrictMode>,
+    );
+
+    void act(() => vi.advanceTimersByTime(30));
+    expect(vi.getTimerCount()).toBe(1);
+    void act(() => vi.advanceTimersByTime(20));
+    expect(screen.getByRole('status').textContent).toBe('M');
+    void act(() => vi.advanceTimersByTime(20));
+    expect(screen.getByRole('status').textContent).toBe('MA');
+    void act(() => vi.advanceTimersByTime(20));
+    expect(screen.getByRole('status').textContent).toBe('MAP');
+    expect(screen.getByRole('status').getAttribute('data-done')).toBe('true');
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('resets immediately for changed inputs and prevents stale timers', () => {
+    installMediaQuery(false);
+    const { rerender } = render(
+      <TypewriterProbe text="OLD" speed={25} delay={50} />,
+    );
+
+    void act(() => vi.advanceTimersByTime(75));
+    expect(screen.getByRole('status').textContent).toBe('O');
+
+    rerender(<TypewriterProbe text="NEW" speed={10} delay={80} />);
+    expect(screen.getByRole('status').textContent).toBe('');
+    expect(screen.getByRole('status').getAttribute('data-done')).toBe('false');
+    void act(() => vi.advanceTimersByTime(79));
+    expect(screen.getByRole('status').textContent).toBe('');
+    void act(() => vi.advanceTimersByTime(1));
+    void act(() => vi.advanceTimersByTime(10));
+    expect(screen.getByRole('status').textContent).toBe('N');
+    void act(() => vi.advanceTimersByTime(20));
+    expect(screen.getByRole('status').textContent).toBe('NEW');
+    expect(screen.getByRole('status').getAttribute('data-done')).toBe('true');
+
+    rerender(<output>stopped</output>);
+    void act(() => vi.advanceTimersByTime(500));
+    expect(screen.getByRole('status').textContent).toBe('stopped');
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
 
