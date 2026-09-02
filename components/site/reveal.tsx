@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { MotionConfig, motion } from 'motion/react';
 
 type RevealProps = {
@@ -6,6 +6,7 @@ type RevealProps = {
   className?: string;
   delay?: number;
   as?: 'div' | 'article';
+  style?: CSSProperties;
 };
 
 const transition = {
@@ -18,9 +19,11 @@ export function Reveal({
   className,
   delay = 0,
   as = 'div',
+  style,
 }: RevealProps) {
   const motionProps = {
     className,
+    style,
     'data-reveal': '',
     initial: { opacity: 0, y: 16 },
     whileInView: { opacity: 1, y: 0 },

@@ -6,17 +6,31 @@ async function read(path) {
   return readFile(new URL(path, import.meta.url), 'utf8').catch(() => '');
 }
 
-const [css, nav, home, project, hero, videoHook, heroFallback, reveal] =
-  await Promise.all([
-    read('../site/site.css'),
-    read('../components/site/site-nav.tsx'),
-    read('../components/site/home-page.tsx'),
-    read('../components/site/project-detail-page.tsx'),
-    read('../components/site/interactive-hero.tsx'),
-    read('../hooks/use-background-video.ts'),
-    read('../public/media/hero-fallback.svg'),
-    read('../components/site/reveal.tsx'),
-  ]);
+const [
+  css,
+  nav,
+  home,
+  project,
+  projectApp,
+  projectMain,
+  projectAccents,
+  hero,
+  videoHook,
+  heroFallback,
+  reveal,
+] = await Promise.all([
+  read('../site/site.css'),
+  read('../components/site/site-nav.tsx'),
+  read('../components/site/home-page.tsx'),
+  read('../components/site/project-detail-page.tsx'),
+  read('../components/site/project-app.tsx'),
+  read('../project-main.tsx'),
+  read('../site/project-accents.ts'),
+  read('../components/site/interactive-hero.tsx'),
+  read('../hooks/use-background-video.ts'),
+  read('../public/media/hero-fallback.svg'),
+  read('../components/site/reveal.tsx'),
+]);
 
 test('shared page shells include the site navigation and footer', () => {
   assert.match(home, /<SiteNav\s*\/>/);
@@ -45,41 +59,30 @@ test('project detail source declares the complete evidence-led case structure', 
   assert.match(project, /<SiteNav\s+projectMode\s*\/>/);
   assert.doesNotMatch(project, /ProjectCaseCard/);
   assert.doesNotMatch(project, /from\s+['"][^'"]*project-case/);
+  assert.match(project, /projectAccents/);
+  assert.match(project, /<h3 className="project-story-label"\s+id=/);
+  assert.match(project, /aria-labelledby=\{headingId\}/);
+  assert.doesNotMatch(project, /<aside className="project-boundary-note">/);
 });
 
-function hexToRgb(hex) {
-  return [0, 2, 4].map((index) =>
-    Number.parseInt(hex.slice(index + 1, index + 3), 16),
-  );
-}
+test('project entry resolves a dataset id through the shared ProjectApp shell', () => {
+  assert.match(projectApp, /export function ProjectApp/);
+  assert.match(projectApp, /projects\.find/);
+  assert.match(projectApp, /项目不存在/);
+  assert.match(projectApp, /homeHref/);
+  assert.match(projectApp, /<SiteNav\s+projectMode\s*\/>/);
+  assert.match(projectApp, /<SiteFooter\s*\/>/);
+  assert.match(projectAccents, /Record<ProjectCase\[['"]id['"]\], string>/);
+  assert.match(home, /projectAccents/);
+});
 
-function relativeLuminance([red, green, blue]) {
-  const channel = (value) => {
-    const normalized = value / 255;
-    return normalized <= 0.04045
-      ? normalized / 12.92
-      : ((normalized + 0.055) / 1.055) ** 2.4;
-  };
-  return (
-    0.2126 * channel(red) + 0.7152 * channel(green) + 0.0722 * channel(blue)
-  );
-}
-
-function contrast(first, second) {
-  const [lighter, darker] = [
-    relativeLuminance(first),
-    relativeLuminance(second),
-  ].sort((a, b) => b - a);
-  return (lighter + 0.05) / (darker + 0.05);
-}
-
-function mix(background, foreground, foregroundRatio) {
-  return background.map((value, index) =>
-    Math.round(
-      value * (1 - foregroundRatio) + foreground[index] * foregroundRatio,
-    ),
-  );
-}
+test('project bootstrap delegates dataset resolution to ProjectApp', () => {
+  assert.match(projectMain, /import \{ ProjectApp \}/);
+  assert.match(projectMain, /document\.body\.dataset\.projectId/);
+  assert.match(projectMain, /<ProjectApp projectId=/);
+  assert.doesNotMatch(projectMain, /projects\.find/);
+  assert.doesNotMatch(projectMain, /ProjectDetailPage/);
+});
 
 test('homepage source declares the recruiter-facing content structure', () => {
   for (const label of [
@@ -115,34 +118,16 @@ test('reveal primitive keeps motion singular, viewport-bound, and user-reduced',
   assert.match(home, /delay=\{index \* 0\.04\}/);
 });
 
-test('project accent colors stay readable on normal and hover card surfaces', () => {
-  const expectedAccents = {
-    compliance: '#1f5f3a',
-    'mock-interview': '#9c3b00',
-    'career-pathfinder': '#69408d',
-    'resume-autofill': '#195d91',
-  };
-  const paper = hexToRgb('#f7f7f3');
-  assert.equal(new Set(Object.values(expectedAccents)).size, 4);
+test('project cards source their accents from the shared typed map', () => {
+  assert.match(projectAccents, /export const projectAccents/);
+  assert.match(home, /projectAccents\[project\.id\]/);
+  assert.match(home, /--project-card-accent/);
+  assert.doesNotMatch(css, /project-accent-/);
+});
 
-  for (const [project, hex] of Object.entries(expectedAccents)) {
-    assert.match(
-      css,
-      new RegExp(
-        `\\.project-accent-${project}\\s*\\{\\s*--project-card-accent:\\s*${hex};`,
-      ),
-    );
-    const accent = hexToRgb(hex);
-    const hover = mix(paper, accent, 0.08);
-    assert.ok(
-      contrast(accent, paper) >= 4.5,
-      `${project} should pass on paper`,
-    );
-    assert.ok(
-      contrast(accent, hover) >= 4.5,
-      `${project} should pass on hover`,
-    );
-  }
+test('noninteractive tooling does not advertise hover or focus behavior', () => {
+  assert.doesNotMatch(css, /\.project-tool:hover/);
+  assert.doesNotMatch(css, /\.project-tool:focus-within/);
 });
 
 test('shared CSS exposes the site design tokens', () => {

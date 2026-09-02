@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 import { InteractiveHero } from '@/components/site/interactive-hero';
 import { Reveal } from '@/components/site/reveal';
 import { SectionHeading } from '@/components/site/section-heading';
@@ -12,6 +14,7 @@ import {
   type Experience,
 } from '@/lib/resume';
 import { projects, type ProjectCase } from '@/lib/projects';
+import { projectAccents } from '@/site/project-accents';
 import { projectHref } from '@/site/routes';
 
 function ExperienceItem({
@@ -64,8 +67,13 @@ function ProjectCard({
   return (
     <Reveal
       as="article"
-      className={`project-card project-accent-${project.id}`}
+      className="project-card"
       delay={delay}
+      style={
+        {
+          '--project-card-accent': projectAccents[project.id],
+        } as CSSProperties
+      }
     >
       <p className="project-index">PROJECT / {project.index}</p>
       <h3>{project.title}</h3>

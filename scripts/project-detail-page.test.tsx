@@ -3,13 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ProjectDetailPage } from '@/components/site/project-detail-page';
 import { projects } from '@/lib/projects';
-
-const expectedAccents = {
-  compliance: '#1f5f3a',
-  'mock-interview': '#9c3b00',
-  'career-pathfinder': '#69408d',
-  'resume-autofill': '#195d91',
-} as const;
+import { projectAccents } from '@/site/project-accents';
 
 function installBrowserPrimitives() {
   window.matchMedia = vi.fn(() => ({
@@ -129,6 +123,13 @@ describe('ProjectDetailPage', () => {
         ...star.querySelectorAll<HTMLElement>('article.project-star-card'),
       ];
       expect(starCards).toHaveLength(4);
+      for (const label of ['SITUATION', 'TASK', 'ACTION', 'RESULT']) {
+        const card = within(star).getByRole('article', { name: label });
+        expect(card.classList.contains('project-star-card')).toBe(true);
+        expect(
+          within(card).getByRole('heading', { level: 3, name: label }),
+        ).toBeTruthy();
+      }
       for (const [label, values] of [
         ['SITUATION', [project.situation]],
         ['TASK', [project.task]],
@@ -198,6 +199,12 @@ describe('ProjectDetailPage', () => {
           project.boundary,
         ),
       ).toBeTruthy();
+      expect(
+        document.querySelectorAll('aside.project-boundary-note'),
+      ).toHaveLength(0);
+      for (const landmark of screen.getAllByRole('complementary')) {
+        expect(landmark.getAttribute('aria-label')).toBeTruthy();
+      }
       expect(screen.queryByText(/复刻/)).toBeNull();
       expect(screen.queryByRole('link', { name: /pdf/i })).toBeNull();
       expect(document.querySelector('a[href$=".pdf"]')).toBeNull();
@@ -207,7 +214,7 @@ describe('ProjectDetailPage', () => {
   it.each(projects)('sets a readable project accent for $id', (project) => {
     const { container } = render(<ProjectDetailPage project={project} />);
     const shell = container.querySelector('.project-shell') as HTMLElement;
-    const accent = expectedAccents[project.id];
+    const accent = projectAccents[project.id];
     expect(shell.style.getPropertyValue('--project-accent')).toBe(accent);
     expect(contrast(accent, '#f7f7f3')).toBeGreaterThanOrEqual(4.5);
     expect(

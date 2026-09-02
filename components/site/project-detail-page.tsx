@@ -5,14 +5,8 @@ import { SectionHeading } from '@/components/site/section-heading';
 import { SiteFooter } from '@/components/site/site-footer';
 import { SiteNav } from '@/components/site/site-nav';
 import { projects, type ProjectCase } from '@/lib/projects';
+import { projectAccents } from '@/site/project-accents';
 import { homeHref, projectHref } from '@/site/routes';
-
-export const projectAccents: Record<ProjectCase['id'], string> = {
-  compliance: '#1f5f3a',
-  'mock-interview': '#9c3b00',
-  'career-pathfinder': '#69408d',
-  'resume-autofill': '#195d91',
-};
 
 function getNeighbors(project: ProjectCase) {
   const currentIndex = projects.findIndex(({ id }) => id === project.id);
@@ -30,12 +24,14 @@ type StoryCardProps = {
 };
 
 function StoryCard({ letter, label, values }: StoryCardProps) {
+  const headingId = `project-star-${letter.toLowerCase()}`;
+
   return (
-    <article className="project-star-card">
-      <p className="project-story-label">
+    <article className="project-star-card" aria-labelledby={headingId}>
+      <h3 className="project-story-label" id={headingId}>
         <span aria-hidden="true">{letter}</span>
         {label}
-      </p>
+      </h3>
       <ul>
         {values.map((value) => (
           <li key={value}>{value}</li>
@@ -232,9 +228,9 @@ export function ProjectDetailPage({ project }: { project: ProjectCase }) {
               title="诚实边界"
               id="project-boundary-title"
             />
-            <aside className="project-boundary-note">
+            <div className="project-boundary-note">
               <p>{project.boundary}</p>
-            </aside>
+            </div>
           </Reveal>
         </section>
 
