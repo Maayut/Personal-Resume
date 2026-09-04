@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import { useEffect, type CSSProperties } from 'react';
 
 import { InteractiveHero } from '@/components/site/interactive-hero';
 import { Reveal } from '@/components/site/reveal';
@@ -16,6 +16,17 @@ import {
 import { projects, type ProjectCase } from '@/lib/projects';
 import { projectAccents } from '@/site/project-accents';
 import { projectHref } from '@/site/routes';
+
+function RestoreHomepageFragment() {
+  useEffect(() => {
+    const targetId = window.location.hash.slice(1);
+    if (!targetId) return;
+
+    document.getElementById(targetId)?.scrollIntoView();
+  }, []);
+
+  return null;
+}
 
 function ExperienceItem({
   experience,
@@ -89,6 +100,7 @@ function ProjectCard({
 export function HomePage() {
   return (
     <main className="site-shell">
+      <RestoreHomepageFragment />
       <SiteNav />
       <InteractiveHero />
       <section

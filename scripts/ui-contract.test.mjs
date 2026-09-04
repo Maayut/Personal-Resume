@@ -171,6 +171,7 @@ test('public shared shells do not offer a PDF download', () => {
 
 test('navigation supports reduced motion and accessible mobile disclosure', () => {
   assert.match(css, /prefers-reduced-motion/);
+  assert.match(css, /:focus-visible\s*\{/);
   assert.match(css, /scroll-padding-top:\s*4\.75rem/);
   assert.match(
     css,

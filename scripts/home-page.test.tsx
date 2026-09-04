@@ -1,4 +1,10 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomePage } from '@/components/site/home-page';
@@ -55,8 +61,25 @@ describe('HomePage', () => {
 
   afterEach(() => {
     cleanup();
+    window.location.hash = '';
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
+  });
+
+  it('restores a homepage fragment after client-rendered sections mount', async () => {
+    window.location.hash = '#projects';
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    render(<HomePage />);
+
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalledOnce());
+    expect(scrollIntoView.mock.instances[0]).toBe(
+      document.getElementById('projects'),
+    );
   });
 
   it('renders one accessible base-safe portrait', () => {

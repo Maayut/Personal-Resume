@@ -4,13 +4,31 @@ import test from "node:test";
 import ts from "typescript";
 
 const publicSourceFiles = [
+  "../index.html",
+  "../pages-main.tsx",
+  "../project-main.tsx",
   "../app/layout.tsx",
   "../app/page.tsx",
-  "../components/project-case.tsx",
-  "../components/motion-enhancer.tsx",
-  "../components/ui/card.tsx",
+  "../components/site/home-page.tsx",
+  "../components/site/interactive-hero.tsx",
+  "../components/site/project-app.tsx",
+  "../components/site/project-detail-page.tsx",
+  "../components/site/reveal.tsx",
+  "../components/site/section-heading.tsx",
+  "../components/site/site-footer.tsx",
+  "../components/site/site-nav.tsx",
+  "../hooks/use-background-video.ts",
+  "../hooks/use-media-query.ts",
+  "../hooks/use-typewriter.ts",
   "../lib/projects.ts",
   "../lib/resume.ts",
+  "../site/project-accents.ts",
+  "../site/routes.ts",
+  "../site/site.css",
+  "../projects/compliance/index.html",
+  "../projects/mock-interview/index.html",
+  "../projects/career-pathfinder/index.html",
+  "../projects/resume-autofill/index.html",
 ];
 
 const requiredProjectIds = [
@@ -212,8 +230,9 @@ test("the AST contract rejects uneven and incomplete inline challenge fixtures",
   assert.throws(() => parseProjectChallenges(projectFixture([2, 2, 2, 2], true)));
 });
 
-test("current public entry/component TypeScript sources and resume data contain no PDF download surface", async () => {
-  const forbiddenPdfPattern = /\.pdf\b|下载 PDF|pdfUrl|downloadResume/i;
+test("authored public sources contain no PDF, low-quality copy, or replication claim", async () => {
+  const forbiddenPublicCopy =
+    /\.pdf\b|下载 PDF|pdfUrl|downloadResume|真实日志、场景约束和用户反馈|复刻/i;
   const sources = await Promise.all(
     publicSourceFiles.map(async (path) => [
       path,
@@ -222,6 +241,6 @@ test("current public entry/component TypeScript sources and resume data contain 
   );
 
   for (const [path, source] of sources) {
-    assert.doesNotMatch(source, forbiddenPdfPattern, path);
+    assert.doesNotMatch(source, forbiddenPublicCopy, path);
   }
 });
