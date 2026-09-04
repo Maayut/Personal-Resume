@@ -1,7 +1,7 @@
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/postcss";
 import { fileURLToPath, URL } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 
@@ -14,6 +14,10 @@ export default defineConfig({
     alias: {
       "@": root,
     },
+  },
+  test: {
+    environment: "jsdom",
+    exclude: ["**/node_modules/**", "**/.worktrees/**"],
   },
   build: {
     outDir: "dist-pages",
