@@ -38,21 +38,42 @@ export function installMotionEnhancements() {
   document
     .querySelectorAll<HTMLElement>('[data-spotlight]')
     .forEach((surface) => {
-      surface.addEventListener('pointermove', (event: PointerEvent) => {
-        const rect = surface.getBoundingClientRect();
-        surface.style.setProperty(
-          '--pointer-x',
-          ((event.clientX - rect.left) / rect.width) * 100 + '%',
-        );
-        surface.style.setProperty(
-          '--pointer-y',
-          ((event.clientY - rect.top) / rect.height) * 100 + '%',
-        );
-      });
-      surface.addEventListener('pointerleave', () => {
-        surface.style.setProperty('--pointer-x', '50%');
-        surface.style.setProperty('--pointer-y', '50%');
-      });
+      let frameId: number | null = null;
+      let rect: DOMRect | null = null;
+      let nextX = '50%';
+      let nextY = '50%';
+
+      const apply = () => {
+        frameId = null;
+        surface.style.setProperty('--pointer-x', nextX);
+        surface.style.setProperty('--pointer-y', nextY);
+      };
+      const schedule = () => {
+        if (frameId === null) frameId = window.requestAnimationFrame(apply);
+      };
+      const cacheRect = () => {
+        rect = surface.getBoundingClientRect();
+      };
+      const onPointerMove = (event: PointerEvent) => {
+        if (!rect) return;
+        nextX = `${((event.clientX - rect.left) / rect.width) * 100}%`;
+        nextY = `${((event.clientY - rect.top) / rect.height) * 100}%`;
+        schedule();
+      };
+      const onPointerLeave = () => {
+        rect = null;
+        nextX = '50%';
+        nextY = '50%';
+        schedule();
+      };
+      const invalidateRect = () => {
+        if (rect) cacheRect();
+      };
+
+      surface.addEventListener('pointerenter', cacheRect);
+      surface.addEventListener('pointermove', onPointerMove);
+      surface.addEventListener('pointerleave', onPointerLeave);
+      window.addEventListener('resize', invalidateRect, { passive: true });
     });
 }
 

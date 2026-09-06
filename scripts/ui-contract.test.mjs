@@ -18,6 +18,7 @@ const [
   videoHook,
   heroFallback,
   reveal,
+  motionEnhancer,
 ] = await Promise.all([
   read('../site/site.css'),
   read('../components/site/site-nav.tsx'),
@@ -30,6 +31,7 @@ const [
   read('../hooks/use-background-video.ts'),
   read('../public/media/hero-fallback.svg'),
   read('../components/site/reveal.tsx'),
+  read('../components/motion-enhancer.tsx'),
 ]);
 
 test('shared page shells include the site navigation and footer', () => {
@@ -195,6 +197,26 @@ test('hero fallback SVG is purely decorative without textual metadata', () => {
   assert.match(heroFallback, /focusable="false"/);
   assert.doesNotMatch(heroFallback, /<(?:text|title|desc)\b/i);
   assert.doesNotMatch(heroFallback, /aria-label/i);
+});
+
+test('hero motion surfaces use compositor-friendly properties', () => {
+  assert.match(css, /\.hero-video\s*\{[\s\S]*?will-change:\s*transform/);
+  assert.match(css, /\.project-card\s*\{[\s\S]*?will-change:\s*transform/);
+  assert.match(
+    css,
+    /@media \(max-width: 860px\)[\s\S]*?\.site-nav\s*\{[\s\S]*?backdrop-filter:\s*blur\(8px\)/,
+  );
+});
+
+test('spotlight motion is frame-coalesced and avoids layout reads per pointer event', () => {
+  assert.match(motionEnhancer, /requestAnimationFrame/);
+  assert.match(motionEnhancer, /getBoundingClientRect\(\)/);
+  assert.match(motionEnhancer, /pointermove/);
+  assert.match(motionEnhancer, /frameId/);
+  assert.doesNotMatch(
+    motionEnhancer,
+    /const onPointerMove[\s\S]{0,500}getBoundingClientRect\(\)/,
+  );
 });
 
 test('background video hook encodes motion-safe responsive scrubbing', () => {

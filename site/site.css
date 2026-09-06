@@ -217,6 +217,9 @@ button {
   html {
     scroll-padding-top: 4rem;
   }
+  .site-nav {
+    backdrop-filter: blur(8px);
+  }
   .site-container {
     width: min(100% - 2rem, 78rem);
   }
@@ -273,6 +276,7 @@ button {
   height: 100%;
   object-fit: cover;
   object-position: 66% center;
+  will-change: transform;
   pointer-events: none;
 }
 
@@ -653,6 +657,7 @@ button {
   transition:
     background 220ms var(--ease-field),
     transform 220ms var(--ease-field);
+  will-change: transform;
 }
 
 .project-card:hover,

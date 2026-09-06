@@ -71,6 +71,30 @@ function installMediaQuery(
   };
 }
 
+function installAnimationFrameHarness() {
+  let nextId = 1;
+  const frames = new Map<number, FrameRequestCallback>();
+  const request = vi.fn((callback: FrameRequestCallback) => {
+    const id = nextId++;
+    frames.set(id, callback);
+    return id;
+  });
+  const cancel = vi.fn((id: number) => frames.delete(id));
+  vi.stubGlobal('requestAnimationFrame', request);
+  vi.stubGlobal('cancelAnimationFrame', cancel);
+
+  return {
+    request,
+    cancel,
+    flush(timestamp = 16) {
+      const pending = [...frames.values()];
+      frames.clear();
+      pending.forEach((callback) => callback(timestamp));
+    },
+    pending: () => frames.size,
+  };
+}
+
 function TypewriterProbe({
   text,
   speed = 42,
@@ -261,7 +285,122 @@ describe('useBackgroundVideo', () => {
     });
   });
 
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
+
+  it('coalesces desktop pointer input into one smooth video update per frame', () => {
+    installMediaQuery(false);
+    const raf = installAnimationFrameHarness();
+    let video!: HTMLVideoElement;
+    render(
+      <VideoProbe
+        onReady={(node) => {
+          video = node;
+        }}
+      />,
+    );
+    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
+    const currentTime = vi.spyOn(video, 'currentTime', 'set');
+
+    void act(() => {
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 100 }));
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 700 }));
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 1200 }));
+    });
+
+    expect(currentTime).not.toHaveBeenCalled();
+    expect(raf.pending()).toBe(1);
+    void act(() => raf.flush());
+    expect(currentTime).toHaveBeenCalledTimes(1);
+    expect(currentTime.mock.lastCall?.[0]).toBeGreaterThan(0);
+    expect(currentTime.mock.lastCall?.[0]).toBeLessThan(10);
+  });
+
+  it('does not schedule video frames while the document is hidden', () => {
+    installMediaQuery(false);
+    const raf = installAnimationFrameHarness();
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'hidden',
+    });
+    let video!: HTMLVideoElement;
+    render(
+      <VideoProbe
+        onReady={(node) => {
+          video = node;
+        }}
+      />,
+    );
+    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
+
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
+    );
+
+    expect(raf.request).not.toHaveBeenCalled();
+    expect(raf.pending()).toBe(0);
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'visible',
+    });
+  });
+
+  it('waits for metadata before writing currentTime', () => {
+    installMediaQuery(false);
+    const raf = installAnimationFrameHarness();
+    let video!: HTMLVideoElement;
+    render(
+      <VideoProbe
+        onReady={(node) => {
+          video = node;
+        }}
+      />,
+    );
+    Object.defineProperty(video, 'duration', {
+      configurable: true,
+      value: Number.NaN,
+    });
+    const currentTime = vi.spyOn(video, 'currentTime', 'set');
+
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
+    );
+    void act(() => raf.flush());
+    expect(currentTime).not.toHaveBeenCalled();
+    expect(raf.pending()).toBe(1);
+
+    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
+    void act(() => raf.flush(32));
+    expect(currentTime).toHaveBeenCalledTimes(1);
+  });
+
+  it('cancels the pending RAF when switching away from desktop mode', () => {
+    const media = installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    let video!: HTMLVideoElement;
+    render(
+      <VideoProbe
+        onReady={(node) => {
+          video = node;
+        }}
+      />,
+    );
+    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
+    const currentTime = vi.spyOn(video, 'currentTime', 'set');
+
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
+    );
+    expect(raf.pending()).toBe(1);
+    act(() => media.setDesktop(false));
+
+    expect(raf.cancel).toHaveBeenCalledTimes(1);
+    expect(raf.pending()).toBe(0);
+    void act(() => raf.flush());
+    expect(currentTime).not.toHaveBeenCalled();
+  });
 
   it('pauses and rewinds for reduced motion', () => {
     installMediaQuery(true);
@@ -299,8 +438,9 @@ describe('useBackgroundVideo', () => {
     expect(video.playsInline).toBe(true);
   });
 
-  it('scrubs finite desktop video within duration and removes its listener', () => {
+  it('smoothly scrubs finite desktop video within duration and removes its listener', () => {
     installMediaQuery(false);
+    const raf = installAnimationFrameHarness();
     let video!: HTMLVideoElement;
     const { unmount } = render(
       <VideoProbe
@@ -310,29 +450,26 @@ describe('useBackgroundVideo', () => {
       />,
     );
     Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
-    video.currentTime = 5;
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 0 })),
-    );
+    video.currentTime = 0;
     void act(() =>
       window.dispatchEvent(new MouseEvent('mousemove', { clientX: 9999 })),
     );
-    expect(video.currentTime).toBe(10);
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: -9999 })),
-    );
-    expect(video.currentTime).toBe(0);
+    void act(() => raf.flush());
+    expect(video.currentTime).toBeGreaterThan(0);
+    expect(video.currentTime).toBeLessThanOrEqual(10);
 
     unmount();
     video.currentTime = 5;
     void act(() =>
       window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
     );
+    void act(() => raf.flush(32));
     expect(video.currentTime).toBe(5);
   });
 
   it('reapplies scrub and playback exactly once across live desktop changes', () => {
     const media = installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
     let video!: HTMLVideoElement;
     render(
       <VideoProbe
@@ -344,12 +481,11 @@ describe('useBackgroundVideo', () => {
     Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
     video.currentTime = 0;
     void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 0 })),
-    );
-    void act(() =>
       window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
     );
-    expect(video.currentTime).toBe(4);
+    void act(() => raf.flush());
+    expect(video.currentTime).toBeGreaterThan(0);
+    expect(video.currentTime).toBeLessThan(5);
 
     act(() => media.setDesktop(false));
     expect(play).toHaveBeenCalledTimes(1);
@@ -357,20 +493,21 @@ describe('useBackgroundVideo', () => {
     void act(() =>
       window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
     );
+    void act(() => raf.flush(32));
     expect(video.currentTime).toBe(0);
 
     act(() => media.setDesktop(true));
     void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 0 })),
-    );
-    void act(() =>
       window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
     );
-    expect(video.currentTime).toBe(4);
+    void act(() => raf.flush(48));
+    expect(video.currentTime).toBeGreaterThan(0);
+    expect(video.currentTime).toBeLessThan(5);
   });
 
   it('pauses, resets, and restores desktop scrubbing across live reduced motion', () => {
     const media = installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
     let video!: HTMLVideoElement;
     render(
       <VideoProbe
@@ -391,12 +528,11 @@ describe('useBackgroundVideo', () => {
     act(() => media.setReducedMotion(false));
     video.currentTime = 0;
     void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 0 })),
-    );
-    void act(() =>
       window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
     );
-    expect(video.currentTime).toBe(4);
+    void act(() => raf.flush());
+    expect(video.currentTime).toBeGreaterThan(0);
+    expect(video.currentTime).toBeLessThan(5);
   });
 });
 

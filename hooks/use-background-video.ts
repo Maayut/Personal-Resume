@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { useMediaQuery } from '@/hooks/use-media-query';
 
+const SMOOTHING = 0.14;
+const MIN_TIME_DELTA = 0.012;
+const MIN_PROGRESS_DELTA = 0.001;
+
 export function useBackgroundVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [failed, setFailed] = useState(false);
@@ -12,21 +16,6 @@ export function useBackgroundVideo() {
     const video = videoRef.current;
     if (!video || typeof window === 'undefined') return;
 
-    let previousX: number | undefined;
-    const scrub = (event: MouseEvent) => {
-      if (!Number.isFinite(video.duration) || video.duration <= 0) return;
-
-      const delta = previousX === undefined ? 0 : event.clientX - previousX;
-      previousX = event.clientX;
-      const targetTime = video.currentTime;
-      video.currentTime = Math.min(
-        video.duration,
-        Math.max(
-          0,
-          targetTime + (delta / window.innerWidth) * 0.8 * video.duration,
-        ),
-      );
-    };
     const stopVideo = () => {
       video.pause();
       video.currentTime = 0;
@@ -43,9 +32,52 @@ export function useBackgroundVideo() {
       return;
     }
 
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let frameId: number | null = null;
+    let boundsWidth = window.innerWidth;
+
+    const schedule = () => {
+      if (frameId !== null || document.visibilityState === 'hidden') return;
+      frameId = window.requestAnimationFrame(step);
+    };
+
+    const step = () => {
+      frameId = null;
+      if (document.visibilityState === 'hidden') return;
+
+      if (!Number.isFinite(video.duration) || video.duration <= 0) {
+        schedule();
+        return;
+      }
+
+      currentProgress += (targetProgress - currentProgress) * SMOOTHING;
+      const nextTime = currentProgress * video.duration;
+      if (Math.abs(nextTime - video.currentTime) >= MIN_TIME_DELTA) {
+        video.currentTime = nextTime;
+      }
+
+      if (Math.abs(targetProgress - currentProgress) > MIN_PROGRESS_DELTA) {
+        schedule();
+      }
+    };
+
+    const onMouseMove = (event: MouseEvent) => {
+      targetProgress = Math.min(1, Math.max(0, event.clientX / boundsWidth));
+      schedule();
+    };
+    const onResize = () => {
+      boundsWidth = window.innerWidth;
+    };
+
     video.pause();
-    window.addEventListener('mousemove', scrub, { passive: true });
-    return () => window.removeEventListener('mousemove', scrub);
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('resize', onResize);
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+    };
   }, [desktop, reducedMotion]);
 
   return { videoRef, failed, markFailed: () => setFailed(true) };
