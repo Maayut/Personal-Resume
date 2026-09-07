@@ -4,6 +4,7 @@ import { StrictMode, useEffect } from 'react';
 
 import { InteractiveHero } from '@/components/site/interactive-hero';
 import { useBackgroundVideo } from '@/hooks/use-background-video';
+import { useHeroPointerFollow } from '@/hooks/use-hero-pointer-follow';
 import { useTypewriter } from '@/hooks/use-typewriter';
 
 type MediaListener = (event: MediaQueryListEvent) => void;
@@ -120,6 +121,11 @@ function VideoProbe({
   }, [onReady, videoRef]);
 
   return <video ref={videoRef} muted playsInline />;
+}
+
+function PointerFollowProbe() {
+  const { surfaceRef } = useHeroPointerFollow<HTMLDivElement>();
+  return <div ref={surfaceRef} data-testid="pointer-surface" />;
 }
 
 describe('useTypewriter', () => {
@@ -261,6 +267,100 @@ describe('useTypewriter', () => {
     expect(vi.getTimerCount()).toBe(1);
     duringTyping.unmount();
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('useHeroPointerFollow', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('coalesces pointer input and writes only a compositor transform', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { getByTestId } = render(<PointerFollowProbe />);
+    const surface = getByTestId('pointer-surface');
+    const getRect = vi
+      .spyOn(surface, 'getBoundingClientRect')
+      .mockReturnValue({
+        left: 0,
+        top: 0,
+        width: 1000,
+        height: 500,
+        right: 1000,
+        bottom: 500,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      } as DOMRect);
+
+    surface.dispatchEvent(
+      new PointerEvent('pointerenter', { clientX: 500, clientY: 250 }),
+    );
+    surface.dispatchEvent(
+      new PointerEvent('pointermove', { clientX: 800, clientY: 100 }),
+    );
+    surface.dispatchEvent(
+      new PointerEvent('pointermove', { clientX: 900, clientY: 50 }),
+    );
+
+    expect(raf.request).toHaveBeenCalledTimes(1);
+    expect(getRect).toHaveBeenCalledTimes(1);
+    expect(surface.style.getPropertyValue('transform')).toBe('');
+
+    raf.flush();
+
+    expect(surface.style.transform).toMatch(/^translate3d\(/);
+    expect(surface.style.getPropertyValue('--hero-shift-x')).toBe('');
+    expect(surface.style.getPropertyValue('--hero-shift-y')).toBe('');
+  });
+
+  it('does not schedule pointer motion for reduced-motion users', () => {
+    installMediaQuery(true, true);
+    const raf = installAnimationFrameHarness();
+    const { getByTestId } = render(<PointerFollowProbe />);
+    const surface = getByTestId('pointer-surface');
+
+    surface.dispatchEvent(
+      new PointerEvent('pointerenter', { clientX: 500, clientY: 250 }),
+    );
+    surface.dispatchEvent(
+      new PointerEvent('pointermove', { clientX: 800, clientY: 100 }),
+    );
+
+    expect(raf.request).not.toHaveBeenCalled();
+    expect(surface.style.transform).toBe('');
+  });
+
+  it('does not schedule pointer motion while the document is hidden', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'hidden',
+    });
+    const { getByTestId } = render(<PointerFollowProbe />);
+    const surface = getByTestId('pointer-surface');
+
+    surface.dispatchEvent(
+      new PointerEvent('pointerenter', { clientX: 500, clientY: 250 }),
+    );
+    surface.dispatchEvent(
+      new PointerEvent('pointermove', { clientX: 800, clientY: 100 }),
+    );
+
+    expect(raf.request).not.toHaveBeenCalled();
+    expect(surface.style.transform).toBe('');
+
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'visible',
+    });
   });
 });
 
