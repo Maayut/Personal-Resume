@@ -190,6 +190,8 @@ test('interactive hero retains its approved media and sensing copy contracts', (
   assert.match(hero, /hf_20260601_110537/);
   assert.match(hero, /hero-fallback\.svg/);
   assert.match(hero, /AI PRODUCT MANAGER · EMBODIED INTELLIGENCE/);
+  assert.match(hero, /loop/);
+  assert.doesNotMatch(hero, /hero-scrub-hint|左右移动/);
 });
 
 test('hero fallback SVG is purely decorative without textual metadata', () => {
@@ -199,9 +201,9 @@ test('hero fallback SVG is purely decorative without textual metadata', () => {
   assert.doesNotMatch(heroFallback, /aria-label/i);
 });
 
-test('hero motion surfaces use compositor-friendly properties', () => {
-  assert.match(css, /\.hero-video\s*\{[\s\S]*?will-change:\s*transform/);
-  assert.match(css, /\.project-card\s*\{[\s\S]*?will-change:\s*transform/);
+test('remaining motion surfaces use compositor-friendly properties', () => {
+  assert.doesNotMatch(css, /\.hero-video\s*\{[^}]*will-change:\s*transform/);
+  assert.match(css, /\.project-card\s*\{[^}]*will-change:\s*transform/);
   assert.match(
     css,
     /@media \(max-width: 860px\)[\s\S]*?\.site-nav\s*\{[\s\S]*?backdrop-filter:\s*blur\(8px\)/,
@@ -219,8 +221,9 @@ test('spotlight motion is frame-coalesced and avoids layout reads per pointer ev
   );
 });
 
-test('background video hook encodes motion-safe responsive scrubbing', () => {
+test('background video uses native playback without cursor-driven seeking', () => {
   assert.match(videoHook, /prefers-reduced-motion/);
-  assert.match(videoHook, /1024/);
-  assert.match(videoHook, /Math\.max\(\s*0,/);
+  assert.match(videoHook, /video\.play\(\)\.catch/);
+  assert.doesNotMatch(videoHook, /mousemove/);
+  assert.doesNotMatch(videoHook, /requestAnimationFrame/);
 });

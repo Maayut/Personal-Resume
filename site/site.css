@@ -276,7 +276,6 @@ button {
   height: 100%;
   object-fit: cover;
   object-position: 66% center;
-  will-change: transform;
   pointer-events: none;
 }
 
@@ -350,28 +349,6 @@ button {
   }
 }
 
-.hero-scrub-hint {
-  position: absolute;
-  z-index: 2;
-  right: max(1.5rem, calc((100vw - 78rem) / 2));
-  bottom: 2.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 0;
-  color: rgb(17 25 21 / 0.62);
-  font-size: 0.72rem;
-  letter-spacing: 0.06em;
-  pointer-events: none;
-}
-
-.hero-scrub-hint::before {
-  width: 3rem;
-  height: 1px;
-  background: currentColor;
-  content: '';
-}
-
 @media (max-width: 1023px) {
   .resume-hero {
     display: grid;
@@ -415,9 +392,6 @@ button {
     aspect-ratio: 4 / 3;
     background: url('/media/hero-fallback.svg') center / cover;
     content: '';
-  }
-  .hero-scrub-hint {
-    display: none;
   }
 }
 

@@ -18,6 +18,7 @@ export function InteractiveHero() {
         className="hero-video"
         muted
         playsInline
+        loop
         preload="metadata"
         poster={`${import.meta.env.BASE_URL}media/hero-fallback.svg`}
         onError={markFailed}
@@ -46,7 +47,6 @@ export function InteractiveHero() {
           <p className="hero-introduction">{profile.introduction}</p>
         </motion.div>
       </MotionConfig>
-      <p className="hero-scrub-hint">桌面端：左右移动，观察环境变化</p>
     </section>
   );
 }

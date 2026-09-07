@@ -290,32 +290,19 @@ describe('useBackgroundVideo', () => {
     vi.unstubAllGlobals();
   });
 
-  it('coalesces desktop pointer input into one smooth video update per frame', () => {
-    installMediaQuery(false);
+  it('autoplays the desktop background without pointer-driven RAF work', async () => {
+    installMediaQuery(false, true);
     const raf = installAnimationFrameHarness();
-    let video!: HTMLVideoElement;
-    render(
-      <VideoProbe
-        onReady={(node) => {
-          video = node;
-        }}
-      />,
+    render(<VideoProbe onReady={() => undefined} />);
+
+    await act(async () => undefined);
+
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(raf.request).not.toHaveBeenCalled();
+    void act(() =>
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
     );
-    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
-    const currentTime = vi.spyOn(video, 'currentTime', 'set');
-
-    void act(() => {
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 100 }));
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 700 }));
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 1200 }));
-    });
-
-    expect(currentTime).not.toHaveBeenCalled();
-    expect(raf.pending()).toBe(1);
-    void act(() => raf.flush());
-    expect(currentTime).toHaveBeenCalledTimes(1);
-    expect(currentTime.mock.lastCall?.[0]).toBeGreaterThan(0);
-    expect(currentTime.mock.lastCall?.[0]).toBeLessThan(10);
+    expect(raf.request).not.toHaveBeenCalled();
   });
 
   it('does not schedule video frames while the document is hidden', () => {
@@ -325,19 +312,7 @@ describe('useBackgroundVideo', () => {
       configurable: true,
       value: 'hidden',
     });
-    let video!: HTMLVideoElement;
-    render(
-      <VideoProbe
-        onReady={(node) => {
-          video = node;
-        }}
-      />,
-    );
-    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
-
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
-    );
+    render(<VideoProbe onReady={() => undefined} />);
 
     expect(raf.request).not.toHaveBeenCalled();
     expect(raf.pending()).toBe(0);
@@ -345,61 +320,6 @@ describe('useBackgroundVideo', () => {
       configurable: true,
       value: 'visible',
     });
-  });
-
-  it('waits for metadata before writing currentTime', () => {
-    installMediaQuery(false);
-    const raf = installAnimationFrameHarness();
-    let video!: HTMLVideoElement;
-    render(
-      <VideoProbe
-        onReady={(node) => {
-          video = node;
-        }}
-      />,
-    );
-    Object.defineProperty(video, 'duration', {
-      configurable: true,
-      value: Number.NaN,
-    });
-    const currentTime = vi.spyOn(video, 'currentTime', 'set');
-
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
-    );
-    void act(() => raf.flush());
-    expect(currentTime).not.toHaveBeenCalled();
-    expect(raf.pending()).toBe(1);
-
-    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
-    void act(() => raf.flush(32));
-    expect(currentTime).toHaveBeenCalledTimes(1);
-  });
-
-  it('cancels the pending RAF when switching away from desktop mode', () => {
-    const media = installMediaQuery(false, true);
-    const raf = installAnimationFrameHarness();
-    let video!: HTMLVideoElement;
-    render(
-      <VideoProbe
-        onReady={(node) => {
-          video = node;
-        }}
-      />,
-    );
-    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
-    const currentTime = vi.spyOn(video, 'currentTime', 'set');
-
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
-    );
-    expect(raf.pending()).toBe(1);
-    act(() => media.setDesktop(false));
-
-    expect(raf.cancel).toHaveBeenCalledTimes(1);
-    expect(raf.pending()).toBe(0);
-    void act(() => raf.flush());
-    expect(currentTime).not.toHaveBeenCalled();
   });
 
   it('pauses and rewinds for reduced motion', () => {
@@ -438,101 +358,14 @@ describe('useBackgroundVideo', () => {
     expect(video.playsInline).toBe(true);
   });
 
-  it('smoothly scrubs finite desktop video within duration and removes its listener', () => {
-    installMediaQuery(false);
-    const raf = installAnimationFrameHarness();
-    let video!: HTMLVideoElement;
-    const { unmount } = render(
-      <VideoProbe
-        onReady={(node) => {
-          video = node;
-        }}
-      />,
-    );
-    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
-    video.currentTime = 0;
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 9999 })),
-    );
-    void act(() => raf.flush());
-    expect(video.currentTime).toBeGreaterThan(0);
-    expect(video.currentTime).toBeLessThanOrEqual(10);
+  it('resumes autoplay after reduced motion is disabled', () => {
+    const media = installMediaQuery(true, true);
+    render(<VideoProbe onReady={() => undefined} />);
 
-    unmount();
-    video.currentTime = 5;
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
-    );
-    void act(() => raf.flush(32));
-    expect(video.currentTime).toBe(5);
-  });
-
-  it('reapplies scrub and playback exactly once across live desktop changes', () => {
-    const media = installMediaQuery(false, true);
-    const raf = installAnimationFrameHarness();
-    let video!: HTMLVideoElement;
-    render(
-      <VideoProbe
-        onReady={(node) => {
-          video = node;
-        }}
-      />,
-    );
-    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
-    video.currentTime = 0;
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
-    );
-    void act(() => raf.flush());
-    expect(video.currentTime).toBeGreaterThan(0);
-    expect(video.currentTime).toBeLessThan(5);
-
-    act(() => media.setDesktop(false));
-    expect(play).toHaveBeenCalledTimes(1);
-    video.currentTime = 0;
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
-    );
-    void act(() => raf.flush(32));
-    expect(video.currentTime).toBe(0);
-
-    act(() => media.setDesktop(true));
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
-    );
-    void act(() => raf.flush(48));
-    expect(video.currentTime).toBeGreaterThan(0);
-    expect(video.currentTime).toBeLessThan(5);
-  });
-
-  it('pauses, resets, and restores desktop scrubbing across live reduced motion', () => {
-    const media = installMediaQuery(false, true);
-    const raf = installAnimationFrameHarness();
-    let video!: HTMLVideoElement;
-    render(
-      <VideoProbe
-        onReady={(node) => {
-          video = node;
-        }}
-      />,
-    );
-    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
-    video.currentTime = 3;
-    act(() => media.setReducedMotion(true));
-    expect(pause).toHaveBeenCalled();
-    expect(video.currentTime).toBe(0);
-    video.currentTime = 2;
-    void act(() => video.dispatchEvent(new Event('loadedmetadata')));
-    expect(video.currentTime).toBe(0);
-
+    expect(pause).toHaveBeenCalledTimes(1);
     act(() => media.setReducedMotion(false));
-    video.currentTime = 0;
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 640 })),
-    );
-    void act(() => raf.flush());
-    expect(video.currentTime).toBeGreaterThan(0);
-    expect(video.currentTime).toBeLessThan(5);
+
+    expect(play).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -550,8 +383,10 @@ describe('InteractiveHero', () => {
       screen.getByRole('heading', { name: '让 AI 从能力走向真实交互' }),
     ).toBeTruthy();
     const video = document.querySelector('video')!;
+    expect(video.loop).toBe(true);
     expect(video.getAttribute('poster')).toContain('media/hero-fallback.svg');
     expect(video.querySelector('source')?.src).toContain('hf_20260601_110537');
+    expect(screen.queryByText(/左右移动/)).toBeNull();
   });
 
   it('marks the hero fallback state when the video errors', () => {
