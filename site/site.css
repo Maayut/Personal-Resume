@@ -270,13 +270,34 @@ button {
 .hero-video {
   position: absolute;
   z-index: 0;
-  top: 0;
-  right: 0;
-  width: 68%;
-  height: 100%;
+  top: -1rem;
+  right: -1.5rem;
+  width: calc(68% + 1.5rem);
+  height: calc(100% + 2rem);
   object-fit: cover;
   object-position: 66% center;
   pointer-events: none;
+}
+
+.hero-visual {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: auto;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.hero-visual-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.12;
+  background-image: url('/media/hero-fallback.svg');
+  background-position: center;
+  background-size: cover;
+  mix-blend-mode: soft-light;
 }
 
 .has-video-fallback .hero-video {
@@ -367,12 +388,20 @@ button {
     min-height: 1.8em;
     font-size: clamp(3.4rem, 12vw, 6.25rem);
   }
-  .hero-video {
+  .hero-visual {
     order: 2;
     position: relative;
+    inset: auto;
     width: 100%;
-    height: auto;
     aspect-ratio: 4 / 3;
+    transform: none !important;
+    will-change: auto;
+  }
+  .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     object-position: 66% center;
   }
   .hero-wash {

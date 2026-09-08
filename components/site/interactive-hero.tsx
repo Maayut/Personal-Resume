@@ -1,6 +1,7 @@
 import { MotionConfig, motion } from 'motion/react';
 
 import { useBackgroundVideo } from '@/hooks/use-background-video';
+import { useHeroPointerFollow } from '@/hooks/use-hero-pointer-follow';
 import { useTypewriter } from '@/hooks/use-typewriter';
 import { profile } from '@/lib/resume';
 
@@ -9,11 +10,13 @@ const heroVideoUrl =
 
 export function InteractiveHero() {
   const { videoRef, failed, markFailed } = useBackgroundVideo();
+  const { surfaceRef } = useHeroPointerFollow<HTMLDivElement>();
   const { displayed, done } = useTypewriter(profile.headline);
 
   return (
     <section className={`resume-hero${failed ? ' has-video-fallback' : ''}`}>
-      <video
+      <div ref={surfaceRef} className="hero-visual" aria-hidden="true">
+        <video
         ref={videoRef}
         className="hero-video"
         muted
@@ -25,7 +28,9 @@ export function InteractiveHero() {
         aria-hidden="true"
       >
         <source src={heroVideoUrl} type="video/mp4" />
-      </video>
+        </video>
+        <div className="hero-visual-grain" />
+      </div>
       <div className="hero-wash" aria-hidden="true" />
       <MotionConfig reducedMotion="user">
         <motion.div
