@@ -16,6 +16,7 @@ const [
   projectAccents,
   hero,
   videoHook,
+  heroPointerFollow,
   heroFallback,
   reveal,
   motionEnhancer,
@@ -29,6 +30,7 @@ const [
   read('../site/project-accents.ts'),
   read('../components/site/interactive-hero.tsx'),
   read('../hooks/use-background-video.ts'),
+  read('../hooks/use-hero-pointer-follow.ts'),
   read('../public/media/hero-fallback.svg'),
   read('../components/site/reveal.tsx'),
   read('../components/motion-enhancer.tsx'),
@@ -194,6 +196,15 @@ test('interactive hero retains its approved media and sensing copy contracts', (
   assert.doesNotMatch(hero, /hero-scrub-hint|左右移动/);
 });
 
+test('interactive hero pointer follow stays on compositor transforms', () => {
+  assert.match(hero, /useHeroPointerFollow/);
+  assert.match(hero, /hero-visual/);
+  assert.match(heroPointerFollow, /pointermove/);
+  assert.match(heroPointerFollow, /requestAnimationFrame/);
+  assert.match(heroPointerFollow, /translate3d/);
+  assert.doesNotMatch(heroPointerFollow, /currentTime/);
+  assert.doesNotMatch(heroPointerFollow, /getBoundingClientRect\(\)[\s\S]{0,180}style\.transform/);
+});
 test('hero fallback SVG is purely decorative without textual metadata', () => {
   assert.match(heroFallback, /aria-hidden="true"/);
   assert.match(heroFallback, /focusable="false"/);
