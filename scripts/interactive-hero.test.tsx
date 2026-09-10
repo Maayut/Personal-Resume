@@ -1,6 +1,6 @@
 import { act, cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { StrictMode, useEffect } from 'react';
+import { StrictMode, useEffect, useRef } from 'react';
 
 import { InteractiveHero } from '@/components/site/interactive-hero';
 import { useBackgroundVideo } from '@/hooks/use-background-video';
@@ -116,14 +116,19 @@ function VideoProbe({
 }: {
   onReady: (video: HTMLVideoElement) => void;
 }) {
-  const { videoRef, failed } = useBackgroundVideo();
+  const surfaceRef = useRef<HTMLOutputElement>(null);
+  const { videoRef, failed } = useBackgroundVideo(surfaceRef);
 
   useEffect(() => {
     if (videoRef.current) onReady(videoRef.current);
   }, [onReady, videoRef]);
 
   return (
-    <output data-video-failed={failed}>
+    <output
+      ref={surfaceRef}
+      data-testid="video-surface"
+      data-video-failed={failed}
+    >
       <video ref={videoRef} muted playsInline />
     </output>
   );
@@ -249,10 +254,10 @@ describe('useTypewriter', () => {
     const media = installMediaQuery(false);
     render(<TypewriterProbe text="LIVE" speed={10} delay={20} />);
 
-    act(() => media.setReducedMotion(true));
+     act(() => media.setReducedMotion(true));
     expect(screen.getByRole('status').textContent).toBe('LIVE');
     expect(screen.getByRole('status').getAttribute('data-done')).toBe('true');
-    act(() => media.setReducedMotion(false));
+     act(() => media.setReducedMotion(false));
     expect(screen.getByRole('status').textContent).toBe('');
     expect(screen.getByRole('status').getAttribute('data-done')).toBe('false');
     void act(() => vi.advanceTimersByTime(29));
@@ -297,19 +302,17 @@ describe('useHeroPointerFollow', () => {
     const { getByTestId } = render(<PointerFollowProbe />);
     const surface = getByTestId('pointer-surface');
     const overlay = getByTestId('pointer-overlay');
-    const getRect = vi
-      .spyOn(surface, 'getBoundingClientRect')
-      .mockReturnValue({
-        left: 0,
-        top: 0,
-        width: 1000,
-        height: 500,
-        right: 1000,
-        bottom: 500,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      } as DOMRect);
+    const getRect = vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 1000,
+      height: 500,
+      right: 1000,
+      bottom: 500,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
 
     surface.dispatchEvent(
       new PointerEvent('pointerenter', { clientX: 500, clientY: 250 }),
@@ -401,38 +404,214 @@ describe('useBackgroundVideo', () => {
   afterEach(() => {
     cleanup();
     vi.unstubAllGlobals();
-  });
-
-  it('autoplays the desktop background without pointer-driven RAF work', async () => {
-    installMediaQuery(false, true);
-    const raf = installAnimationFrameHarness();
-    render(<VideoProbe onReady={() => undefined} />);
-
-    await act(async () => undefined);
-
-    expect(play).toHaveBeenCalledTimes(1);
-    expect(raf.request).not.toHaveBeenCalled();
-    void act(() =>
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 900 })),
-    );
-    expect(raf.request).not.toHaveBeenCalled();
-  });
-
-  it('does not schedule video frames while the document is hidden', () => {
-    installMediaQuery(false);
-    const raf = installAnimationFrameHarness();
-    Object.defineProperty(document, 'visibilityState', {
-      configurable: true,
-      value: 'hidden',
-    });
-    render(<VideoProbe onReady={() => undefined} />);
-
-    expect(raf.request).not.toHaveBeenCalled();
-    expect(raf.pending()).toBe(0);
     Object.defineProperty(document, 'visibilityState', {
       configurable: true,
       value: 'visible',
     });
+  });
+
+  function prepareVideo(initialDuration = 10) {
+    let video!: HTMLVideoElement;
+    const view = render(
+      <VideoProbe
+        onReady={(node) => {
+          video = node;
+        }}
+      />,
+    );
+    const surface = view.getByTestId('video-surface');
+    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({
+      left: 100,
+      top: 0,
+      width: 1000,
+      height: 500,
+      right: 1100,
+      bottom: 500,
+      x: 100,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+    let currentTime = 0;
+    let seeking = false;
+    let duration = initialDuration;
+    let readyState = Number.isFinite(duration) ? 1 : 0;
+    const seek = vi.fn((value: number) => {
+      currentTime = value;
+      seeking = true;
+    });
+    Object.defineProperties(video, {
+      currentTime: { configurable: true, get: () => currentTime, set: seek },
+      seeking: { configurable: true, get: () => seeking },
+      duration: { configurable: true, get: () => duration },
+      readyState: { configurable: true, get: () => readyState },
+    });
+    const pointer = (clientX: number) => {
+      void act(() =>
+        surface.dispatchEvent(new PointerEvent('pointermove', { clientX })),
+      );
+    };
+    const metadata = (value = initialDuration) => {
+      duration = value;
+      readyState = 1;
+      void act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    };
+    const finishSeek = () => {
+      seeking = false;
+      void act(() => video.dispatchEvent(new Event('seeked')));
+    };
+    return { ...view, video, surface, seek, pointer, metadata, finishSeek };
+  }
+
+  it('keeps desktop video paused and maps the latest cursor position to its timeline', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { video, seek, pointer, metadata } = prepareVideo();
+    metadata();
+
+    expect(play).not.toHaveBeenCalled();
+    expect(pause).toHaveBeenCalled();
+    expect(raf.pending()).toBe(0);
+
+    pointer(300);
+    pointer(600);
+    pointer(900);
+    expect(raf.pending()).toBe(1);
+    expect(seek).not.toHaveBeenCalled();
+     act(() => raf.flush(100));
+
+    expect(seek).toHaveBeenCalledTimes(1);
+    expect(video.currentTime).toBeCloseTo((10 - 1 / 24) * 0.8, 1);
+    expect(play).not.toHaveBeenCalled();
+  });
+
+  it('waits for metadata without spinning frames and then applies the last cursor position', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { video, seek, pointer, metadata } = prepareVideo(Number.NaN);
+
+    pointer(400);
+    pointer(600);
+    expect(raf.pending()).toBe(0);
+    expect(seek).not.toHaveBeenCalled();
+
+    metadata(10);
+     act(() => raf.flush(100));
+    expect(seek).toHaveBeenCalledTimes(1);
+    expect(video.currentTime).toBeCloseTo((10 - 1 / 24) * 0.5, 1);
+  });
+
+  it('allows one in-flight seek and uses the latest target when decoding finishes', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { video, seek, pointer, metadata, finishSeek } = prepareVideo();
+    metadata();
+    pointer(300);
+     act(() => raf.flush(100));
+    expect(seek).toHaveBeenCalledTimes(1);
+
+    pointer(600);
+    pointer(1000);
+     act(() => raf.flush(200));
+    expect(seek).toHaveBeenCalledTimes(1);
+    finishSeek();
+     act(() => raf.flush(250));
+
+    expect(seek).toHaveBeenCalledTimes(2);
+    expect(video.currentTime).toBeCloseTo((10 - 1 / 24) * 0.9, 1);
+  });
+
+  it('limits seeking to 30 updates per second even when decoding is immediate', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { seek, pointer, metadata, finishSeek } = prepareVideo();
+    metadata();
+    pointer(300);
+     act(() => raf.flush(100));
+    finishSeek();
+    pointer(900);
+     act(() => raf.flush(116));
+    expect(seek).toHaveBeenCalledTimes(1);
+     act(() => raf.flush(134));
+    expect(seek).toHaveBeenCalledTimes(2);
+  });
+
+  it('clamps the cursor to valid video positions without seeking to the ended frame', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { video, pointer, metadata, finishSeek } = prepareVideo();
+    metadata();
+    pointer(1200);
+     act(() => raf.flush(100));
+    expect(video.currentTime).toBeCloseTo(10 - 1 / 24, 3);
+    finishSeek();
+    pointer(0);
+     act(() => raf.flush(200));
+    expect(video.currentTime).toBe(0);
+  });
+
+  it('cancels pending cursor work on pointer leave and unmount', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { surface, seek, pointer, metadata, unmount } = prepareVideo();
+    metadata();
+    pointer(600);
+    void act(() => surface.dispatchEvent(new PointerEvent('pointerleave')));
+     act(() => raf.flush(100));
+    expect(seek).not.toHaveBeenCalled();
+    expect(raf.pending()).toBe(0);
+
+    pointer(900);
+    unmount();
+     act(() => raf.flush(200));
+    expect(seek).not.toHaveBeenCalled();
+    expect(raf.pending()).toBe(0);
+  });
+
+  it('suppresses queued targets while hidden, including a pending seek completion', () => {
+    installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { seek, pointer, metadata, finishSeek } = prepareVideo();
+    metadata();
+    pointer(300);
+     act(() => raf.flush(100));
+    pointer(900);
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      value: 'hidden',
+    });
+    void act(() => document.dispatchEvent(new Event('visibilitychange')));
+    finishSeek();
+    pointer(1000);
+     act(() => raf.flush(200));
+    expect(seek).toHaveBeenCalledTimes(1);
+    expect(raf.pending()).toBe(0);
+  });
+
+  it('autoplays on coarse-pointer devices without cursor-driven work', async () => {
+    installMediaQuery(false, false);
+    const raf = installAnimationFrameHarness();
+    const { pointer, metadata, seek } = prepareVideo();
+    metadata();
+    await act(async () => undefined);
+    pointer(900);
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(raf.pending()).toBe(0);
+    expect(seek).not.toHaveBeenCalled();
+  });
+
+  it('cancels desktop seeks when the pointer mode switches to mobile autoplay', async () => {
+    const media = installMediaQuery(false, true);
+    const raf = installAnimationFrameHarness();
+    const { pointer, metadata, seek } = prepareVideo();
+    metadata();
+    pointer(900);
+     act(() => media.setDesktop(false));
+     act(() => raf.flush(100));
+    await act(async () => undefined);
+    expect(play).toHaveBeenCalledTimes(1);
+    expect(seek).not.toHaveBeenCalled();
+    pointer(600);
+    expect(raf.pending()).toBe(0);
   });
 
   it('pauses and rewinds for reduced motion', () => {
@@ -474,18 +653,18 @@ describe('useBackgroundVideo', () => {
     );
   });
 
-  it('resumes autoplay after reduced motion is disabled', () => {
-    const media = installMediaQuery(true, true);
+  it('resumes mobile autoplay after reduced motion is disabled', () => {
+    const media = installMediaQuery(true, false);
     render(<VideoProbe onReady={() => undefined} />);
 
     expect(pause).toHaveBeenCalledTimes(1);
-    act(() => media.setReducedMotion(false));
+     act(() => media.setReducedMotion(false));
 
     expect(play).toHaveBeenCalledTimes(1);
   });
 
   it('ignores a stale play rejection after motion is disabled and re-enabled', async () => {
-    const media = installMediaQuery(false, true);
+    const media = installMediaQuery(false, false);
     let rejectInitialPlay!: (reason: Error) => void;
     play.mockImplementationOnce(
       () =>
@@ -495,8 +674,8 @@ describe('useBackgroundVideo', () => {
     );
     render(<VideoProbe onReady={() => undefined} />);
 
-    act(() => media.setReducedMotion(true));
-    act(() => media.setReducedMotion(false));
+     act(() => media.setReducedMotion(true));
+     act(() => media.setReducedMotion(false));
     await act(async () => undefined);
     await act(async () => {
       rejectInitialPlay(new DOMException('Playback interrupted', 'AbortError'));
@@ -508,8 +687,27 @@ describe('useBackgroundVideo', () => {
     );
   });
 
+  it('ignores a stale mobile playback rejection after switching to cursor control', async () => {
+    const media = installMediaQuery(false, false);
+    let rejectPlay!: (reason: Error) => void;
+    play.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectPlay = reject;
+        }),
+    );
+    render(<VideoProbe onReady={() => undefined} />);
+     act(() => media.setDesktop(true));
+    await act(async () => rejectPlay(new Error('interrupted')));
+
+    expect(pause).toHaveBeenCalled();
+    expect(screen.getByRole('status').getAttribute('data-video-failed')).toBe(
+      'false',
+    );
+  });
+
   it('leaves the fallback when a later playback attempt succeeds', async () => {
-    const media = installMediaQuery(false, true);
+    const media = installMediaQuery(false, false);
     play.mockRejectedValueOnce(new DOMException('Blocked', 'NotAllowedError'));
     render(<VideoProbe onReady={() => undefined} />);
     await act(async () => undefined);
@@ -517,8 +715,8 @@ describe('useBackgroundVideo', () => {
       'true',
     );
 
-    act(() => media.setReducedMotion(true));
-    act(() => media.setReducedMotion(false));
+     act(() => media.setReducedMotion(true));
+     act(() => media.setReducedMotion(false));
     await act(async () => undefined);
 
     expect(play).toHaveBeenCalledTimes(2);
@@ -530,9 +728,12 @@ describe('useBackgroundVideo', () => {
 
 describe('InteractiveHero', () => {
   beforeEach(() => installMediaQuery(false));
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
 
-  it('renders the approved label, headline region, remote video, and fallback poster', () => {
+  it('renders the approved label, headline region, local scrub video, and fallback poster', () => {
     render(<InteractiveHero />);
 
     expect(
@@ -544,8 +745,39 @@ describe('InteractiveHero', () => {
     const video = document.querySelector('video')!;
     expect(video.loop).toBe(true);
     expect(video.getAttribute('poster')).toContain('media/hero-fallback.svg');
-    expect(video.querySelector('source')?.src).toContain('hf_20260601_110537');
+    expect(video.querySelector('source')?.src).toContain('/media/hero-scrub.mp4');
     expect(screen.queryByText(/左右移动/)).toBeNull();
+  });
+
+  it('scrubs the visible video when the cursor moves over foreground hero text', () => {
+    const raf = installAnimationFrameHarness();
+    const { container } = render(<InteractiveHero />);
+    const surface = container.querySelector('.resume-hero')!;
+    const video = container.querySelector('video')!;
+    vi.spyOn(surface, 'getBoundingClientRect').mockReturnValue({
+      left: 100,
+      top: 0,
+      width: 1000,
+      height: 500,
+      right: 1100,
+      bottom: 500,
+      x: 100,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+    Object.defineProperty(video, 'duration', { configurable: true, value: 10 });
+    void act(() => video.dispatchEvent(new Event('loadedmetadata')));
+    void act(() =>
+      screen
+        .getByRole('heading', { name: '让 AI 从能力走向真实交互' })
+        .dispatchEvent(
+          new PointerEvent('pointermove', { clientX: 700, bubbles: true }),
+        ),
+    );
+     act(() => raf.flush(100));
+
+    expect(video.currentTime).toBeCloseTo((10 - 1 / 24) * 0.6, 1);
+    expect(video.autoplay).toBe(false);
   });
 
   it('marks the hero fallback state when the video errors', () => {

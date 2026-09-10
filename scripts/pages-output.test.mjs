@@ -226,7 +226,8 @@ test('homepage bundle deploys the resume hero through shared site assets', () =>
   )?.[1];
 
   assert.match(scripts, /AI PRODUCT MANAGER · EMBODIED INTELLIGENCE/);
-  assert.match(scripts, /hf_20260601_110537/);
+  assert.match(scripts, /\/Personal-Resume\/media\/hero-scrub\.mp4/);
+  assert.ok(fs.existsSync(new URL('media/hero-scrub.mp4', distRoot)));
   assert.ok(fallbackUrl, 'homepage CSS should include the fallback URL');
   assert.ok(
     fs.existsSync(new URL(builtPublicPath(fallbackUrl), distRoot)),

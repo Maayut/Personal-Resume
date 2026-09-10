@@ -189,7 +189,7 @@ test('navigation supports reduced motion and accessible mobile disclosure', () =
 });
 
 test('interactive hero retains its approved media and sensing copy contracts', () => {
-  assert.match(hero, /hf_20260601_110537/);
+  assert.match(hero, /hero-scrub\.mp4/);
   assert.match(hero, /hero-fallback\.svg/);
   assert.match(hero, /AI PRODUCT MANAGER · EMBODIED INTELLIGENCE/);
   assert.match(hero, /loop/);
@@ -203,7 +203,10 @@ test('interactive hero pointer follow stays on compositor transforms', () => {
   assert.match(heroPointerFollow, /requestAnimationFrame/);
   assert.match(heroPointerFollow, /translate3d/);
   assert.doesNotMatch(heroPointerFollow, /currentTime/);
-  assert.doesNotMatch(heroPointerFollow, /getBoundingClientRect\(\)[\s\S]{0,180}style\.transform/);
+  assert.doesNotMatch(
+    heroPointerFollow,
+    /getBoundingClientRect\(\)[\s\S]{0,180}style\.transform/,
+  );
 });
 test('hero fallback SVG is purely decorative without textual metadata', () => {
   assert.match(heroFallback, /aria-hidden="true"/);
@@ -232,9 +235,11 @@ test('spotlight motion is frame-coalesced and avoids layout reads per pointer ev
   );
 });
 
-test('background video uses native playback without cursor-driven seeking', () => {
+test('background video supports cursor-controlled desktop motion and mobile playback', () => {
   assert.match(videoHook, /prefers-reduced-motion/);
+  assert.match(videoHook, /\(hover: hover\) and \(pointer: fine\)/);
   assert.match(videoHook, /video\.play\(\)/);
-  assert.doesNotMatch(videoHook, /mousemove/);
-  assert.doesNotMatch(videoHook, /requestAnimationFrame/);
+  assert.match(videoHook, /pointermove/);
+  assert.match(videoHook, /requestAnimationFrame/);
+  assert.doesNotMatch(hero, /\bautoPlay\b/);
 });

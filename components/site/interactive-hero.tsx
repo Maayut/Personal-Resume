@@ -5,13 +5,12 @@ import { useHeroPointerFollow } from '@/hooks/use-hero-pointer-follow';
 import { useTypewriter } from '@/hooks/use-typewriter';
 import { profile } from '@/lib/resume';
 
-const heroVideoUrl =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260601_110537_3a579fa0-7bbc-4d94-9d25-0e816c7840f5.mp4';
+const heroVideoUrl = `${import.meta.env.BASE_URL}media/hero-scrub.mp4`;
 
 export function InteractiveHero() {
-  const { videoRef, failed, markFailed } = useBackgroundVideo();
   const { motionRef, surfaceRef } =
     useHeroPointerFollow<HTMLElement, HTMLDivElement>();
+  const { videoRef, failed, markFailed } = useBackgroundVideo(surfaceRef);
   const { displayed, done } = useTypewriter(profile.headline);
 
   return (
@@ -26,7 +25,7 @@ export function InteractiveHero() {
           muted
           playsInline
           loop
-          preload="metadata"
+          preload="auto"
           poster={`${import.meta.env.BASE_URL}media/hero-fallback.svg`}
           onError={markFailed}
           aria-hidden="true"
