@@ -22,7 +22,19 @@ export function useBackgroundVideo() {
       return () => video.removeEventListener('loadedmetadata', stopVideo);
     }
 
-    void video.play().catch(() => undefined);
+    let active = true;
+    void video.play().then(
+      () => {
+        if (active) setFailed(false);
+      },
+      () => {
+        if (active) setFailed(true);
+      },
+    );
+
+    return () => {
+      active = false;
+    };
   }, [reducedMotion]);
 
   return { videoRef, failed, markFailed: () => setFailed(true) };

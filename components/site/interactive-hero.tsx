@@ -10,26 +10,30 @@ const heroVideoUrl =
 
 export function InteractiveHero() {
   const { videoRef, failed, markFailed } = useBackgroundVideo();
-  const { surfaceRef } = useHeroPointerFollow<HTMLDivElement>();
+  const { motionRef, surfaceRef } =
+    useHeroPointerFollow<HTMLElement, HTMLDivElement>();
   const { displayed, done } = useTypewriter(profile.headline);
 
   return (
-    <section className={`resume-hero${failed ? ' has-video-fallback' : ''}`}>
-      <div ref={surfaceRef} className="hero-visual" aria-hidden="true">
+    <section
+      ref={surfaceRef}
+      className={`resume-hero${failed ? ' has-video-fallback' : ''}`}
+    >
+      <div className="hero-visual" aria-hidden="true">
         <video
-        ref={videoRef}
-        className="hero-video"
-        muted
-        playsInline
-        loop
-        preload="metadata"
-        poster={`${import.meta.env.BASE_URL}media/hero-fallback.svg`}
-        onError={markFailed}
-        aria-hidden="true"
-      >
-        <source src={heroVideoUrl} type="video/mp4" />
+          ref={videoRef}
+          className="hero-video"
+          muted
+          playsInline
+          loop
+          preload="metadata"
+          poster={`${import.meta.env.BASE_URL}media/hero-fallback.svg`}
+          onError={markFailed}
+          aria-hidden="true"
+        >
+          <source src={heroVideoUrl} type="video/mp4" />
         </video>
-        <div className="hero-visual-grain" />
+        <div ref={motionRef} className="hero-visual-grain" />
       </div>
       <div className="hero-wash" aria-hidden="true" />
       <MotionConfig reducedMotion="user">

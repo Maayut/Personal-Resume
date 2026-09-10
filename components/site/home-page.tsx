@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties } from 'react';
+import { useLayoutEffect, type CSSProperties } from 'react';
 
 import { InteractiveHero } from '@/components/site/interactive-hero';
 import { Reveal } from '@/components/site/reveal';
@@ -18,7 +18,36 @@ import { projectAccents } from '@/site/project-accents';
 import { projectHref } from '@/site/routes';
 
 function RestoreHomepageFragment() {
-  useEffect(() => {
+  useLayoutEffect(() => {
+    const navigation = performance.getEntriesByType(
+      'navigation',
+    )[0] as PerformanceNavigationTiming | undefined;
+    const previousScrollRestoration = window.history.scrollRestoration;
+
+    if (navigation?.type === 'reload') {
+      window.history.scrollRestoration = 'manual';
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${window.location.pathname}${window.location.search}`,
+      );
+      const scrollToTop = () =>
+        window.scrollTo({
+          behavior: 'instant' as ScrollBehavior,
+          left: 0,
+          top: 0,
+        });
+      scrollToTop();
+      const frameId = window.requestAnimationFrame(scrollToTop);
+      window.addEventListener('pageshow', scrollToTop, { once: true });
+
+      return () => {
+        window.cancelAnimationFrame(frameId);
+        window.removeEventListener('pageshow', scrollToTop);
+        window.history.scrollRestoration = previousScrollRestoration;
+      };
+    }
+
     const targetId = window.location.hash.slice(1);
     if (!targetId) return;
 

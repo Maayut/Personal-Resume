@@ -11,14 +11,19 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-export function useHeroPointerFollow<T extends HTMLElement = HTMLElement>() {
+export function useHeroPointerFollow<
+  T extends HTMLElement = HTMLElement,
+  U extends HTMLElement = T,
+>() {
   const surfaceRef = useRef<T>(null);
+  const motionRef = useRef<U>(null);
   const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
-  const desktop = useMediaQuery('(min-width: 1024px)');
+  const supportsHover = useMediaQuery('(hover: hover) and (pointer: fine)');
 
   useEffect(() => {
     const surface = surfaceRef.current;
-    if (!surface || reducedMotion || !desktop) return;
+    const motionSurface = motionRef.current;
+    if (!surface || !motionSurface || reducedMotion || !supportsHover) return;
 
     let rect: DOMRect | null = null;
     let targetX = 0;
@@ -39,7 +44,7 @@ export function useHeroPointerFollow<T extends HTMLElement = HTMLElement>() {
 
       currentX += (targetX - currentX) * FOLLOW_EASE;
       currentY += (targetY - currentY) * FOLLOW_EASE;
-      surface.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0)`;
+      motionSurface.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0)`;
 
       if (
         Math.abs(targetX - currentX) > SETTLE_EPSILON ||
@@ -113,9 +118,9 @@ export function useHeroPointerFollow<T extends HTMLElement = HTMLElement>() {
       surface.removeEventListener('pointerleave', onPointerLeave);
       window.removeEventListener('resize', onResize);
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      surface.style.transform = '';
+      motionSurface.style.transform = '';
     };
-  }, [desktop, reducedMotion]);
+  }, [reducedMotion, supportsHover]);
 
-  return { surfaceRef };
+  return { motionRef, surfaceRef };
 }

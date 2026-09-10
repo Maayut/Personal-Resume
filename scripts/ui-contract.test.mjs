@@ -234,7 +234,7 @@ test('spotlight motion is frame-coalesced and avoids layout reads per pointer ev
 
 test('background video uses native playback without cursor-driven seeking', () => {
   assert.match(videoHook, /prefers-reduced-motion/);
-  assert.match(videoHook, /video\.play\(\)\.catch/);
+  assert.match(videoHook, /video\.play\(\)/);
   assert.doesNotMatch(videoHook, /mousemove/);
   assert.doesNotMatch(videoHook, /requestAnimationFrame/);
 });

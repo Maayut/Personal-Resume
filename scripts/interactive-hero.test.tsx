@@ -20,6 +20,7 @@ function installMediaQuery(
   const matches = (query: string) => {
     if (query === '(prefers-reduced-motion: reduce)') return reducedMotion;
     if (query === '(min-width: 1024px)') return desktop;
+    if (query === '(hover: hover) and (pointer: fine)') return desktop;
     return false;
   };
 
@@ -68,6 +69,7 @@ function installMediaQuery(
         value: desktop ? 1280 : 800,
       });
       notify('(min-width: 1024px)');
+      notify('(hover: hover) and (pointer: fine)');
     },
   };
 }
@@ -114,18 +116,27 @@ function VideoProbe({
 }: {
   onReady: (video: HTMLVideoElement) => void;
 }) {
-  const { videoRef } = useBackgroundVideo();
+  const { videoRef, failed } = useBackgroundVideo();
 
   useEffect(() => {
     if (videoRef.current) onReady(videoRef.current);
   }, [onReady, videoRef]);
 
-  return <video ref={videoRef} muted playsInline />;
+  return (
+    <output data-video-failed={failed}>
+      <video ref={videoRef} muted playsInline />
+    </output>
+  );
 }
 
 function PointerFollowProbe() {
-  const { surfaceRef } = useHeroPointerFollow<HTMLDivElement>();
-  return <div ref={surfaceRef} data-testid="pointer-surface" />;
+  const { motionRef, surfaceRef } = useHeroPointerFollow<HTMLDivElement>();
+
+  return (
+    <div ref={surfaceRef} data-testid="pointer-surface">
+      <div ref={motionRef} data-testid="pointer-overlay" />
+    </div>
+  );
 }
 
 describe('useTypewriter', () => {
@@ -285,6 +296,7 @@ describe('useHeroPointerFollow', () => {
     const raf = installAnimationFrameHarness();
     const { getByTestId } = render(<PointerFollowProbe />);
     const surface = getByTestId('pointer-surface');
+    const overlay = getByTestId('pointer-overlay');
     const getRect = vi
       .spyOn(surface, 'getBoundingClientRect')
       .mockReturnValue({
@@ -315,7 +327,8 @@ describe('useHeroPointerFollow', () => {
 
     raf.flush();
 
-    expect(surface.style.transform).toMatch(/^translate3d\(/);
+    expect(surface.style.transform).toBe('');
+    expect(overlay.style.transform).toMatch(/^translate3d\(/);
     expect(surface.style.getPropertyValue('--hero-shift-x')).toBe('');
     expect(surface.style.getPropertyValue('--hero-shift-y')).toBe('');
   });
@@ -439,7 +452,7 @@ describe('useBackgroundVideo', () => {
     expect(video.currentTime).toBe(0);
   });
 
-  it('attempts muted inline mobile playback and ignores a rejected promise', async () => {
+  it('uses the fallback when muted inline playback is blocked', async () => {
     installMediaQuery(false, false);
     play.mockImplementation(() => Promise.reject(new Error('blocked')));
     let video!: HTMLVideoElement;
@@ -456,6 +469,9 @@ describe('useBackgroundVideo', () => {
     expect(play).toHaveBeenCalled();
     expect(video.muted).toBe(true);
     expect(video.playsInline).toBe(true);
+    expect(screen.getByRole('status').getAttribute('data-video-failed')).toBe(
+      'true',
+    );
   });
 
   it('resumes autoplay after reduced motion is disabled', () => {
@@ -466,6 +482,49 @@ describe('useBackgroundVideo', () => {
     act(() => media.setReducedMotion(false));
 
     expect(play).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a stale play rejection after motion is disabled and re-enabled', async () => {
+    const media = installMediaQuery(false, true);
+    let rejectInitialPlay!: (reason: Error) => void;
+    play.mockImplementationOnce(
+      () =>
+        new Promise<void>((_resolve, reject) => {
+          rejectInitialPlay = reject;
+        }),
+    );
+    render(<VideoProbe onReady={() => undefined} />);
+
+    act(() => media.setReducedMotion(true));
+    act(() => media.setReducedMotion(false));
+    await act(async () => undefined);
+    await act(async () => {
+      rejectInitialPlay(new DOMException('Playback interrupted', 'AbortError'));
+    });
+
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('status').getAttribute('data-video-failed')).toBe(
+      'false',
+    );
+  });
+
+  it('leaves the fallback when a later playback attempt succeeds', async () => {
+    const media = installMediaQuery(false, true);
+    play.mockRejectedValueOnce(new DOMException('Blocked', 'NotAllowedError'));
+    render(<VideoProbe onReady={() => undefined} />);
+    await act(async () => undefined);
+    expect(screen.getByRole('status').getAttribute('data-video-failed')).toBe(
+      'true',
+    );
+
+    act(() => media.setReducedMotion(true));
+    act(() => media.setReducedMotion(false));
+    await act(async () => undefined);
+
+    expect(play).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole('status').getAttribute('data-video-failed')).toBe(
+      'false',
+    );
   });
 });
 

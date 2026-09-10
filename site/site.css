@@ -284,9 +284,7 @@ button {
   z-index: 0;
   inset: 0;
   overflow: hidden;
-  pointer-events: auto;
-  transform: translate3d(0, 0, 0);
-  will-change: transform;
+  pointer-events: none;
 }
 
 .hero-visual-grain {
@@ -297,7 +295,7 @@ button {
   background-image: url('/media/hero-fallback.svg');
   background-position: center;
   background-size: cover;
-  mix-blend-mode: soft-light;
+  will-change: transform;
 }
 
 .has-video-fallback .hero-video {
@@ -394,6 +392,8 @@ button {
     inset: auto;
     width: 100%;
     aspect-ratio: 4 / 3;
+  }
+  .hero-visual-grain {
     transform: none !important;
     will-change: auto;
   }
@@ -414,13 +414,8 @@ button {
       transparent 72%
     );
   }
-  .has-video-fallback::after {
-    display: block;
-    grid-row: 2;
-    width: 100%;
-    aspect-ratio: 4 / 3;
+  .has-video-fallback .hero-visual {
     background: url('/media/hero-fallback.svg') center / cover;
-    content: '';
   }
 }
 

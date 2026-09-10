@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import test from 'node:test';
+import vm from 'node:vm';
 
 const repositoryRoot = new URL('../', import.meta.url);
 const distRoot = new URL('dist-pages/', repositoryRoot);
@@ -131,6 +132,46 @@ test('homepage output uses base-prefixed local assets that resolve', () => {
   const homepage = readBuilt('dist-pages/index.html');
 
   assertBuiltAssetsResolve(homepage, 'homepage');
+});
+
+test('homepage disables reload restoration before rendering while preserving new links', () => {
+  const homepage = readBuilt('dist-pages/index.html');
+  const restorationScript = [
+    ...homepage.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g),
+  ].find(([, body]) => body.includes('scrollRestoration'));
+
+  assert.ok(
+    restorationScript,
+    'homepage needs an early scroll restoration script',
+  );
+  assert.ok(restorationScript.index < homepage.indexOf('</head>'));
+  assert.ok(restorationScript.index < homepage.indexOf('<script type="module"'));
+
+  for (const navigationType of ['reload', 'navigate', 'back_forward', undefined]) {
+    const replacements = [];
+    const state = { preserved: true };
+    const history = {
+      state,
+      scrollRestoration: 'auto',
+      replaceState: (...args) => replacements.push(args),
+    };
+    vm.runInNewContext(restorationScript[1], {
+      performance: {
+        getEntriesByType: () => navigationType ? [{ type: navigationType }] : [],
+      },
+      history,
+      location: { pathname: basePath, search: '?source=resume', hash: '#contact' },
+    });
+
+    assert.equal(
+      history.scrollRestoration,
+      navigationType === 'reload' ? 'manual' : 'auto',
+    );
+    assert.deepEqual(
+      replacements,
+      navigationType === 'reload' ? [[state, '', `${basePath}?source=resume`]] : [],
+    );
+  }
 });
 
 test('homepage output exposes recruiter metadata and durable case-route inputs', () => {

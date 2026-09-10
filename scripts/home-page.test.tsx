@@ -66,7 +66,44 @@ describe('HomePage', () => {
     vi.unstubAllGlobals();
   });
 
-  it('restores a homepage fragment after client-rendered sections mount', async () => {
+  it('starts at the hero and removes a stale fragment after a reload', async () => {
+    vi.spyOn(performance, 'getEntriesByType').mockReturnValue([
+      { type: 'reload' } as PerformanceNavigationTiming,
+    ]);
+    window.location.hash = '#projects';
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+    const requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+      callback(16);
+      return 1;
+    });
+    Object.defineProperty(window, 'requestAnimationFrame', {
+      configurable: true,
+      value: requestAnimationFrame,
+    });
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(Element.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    render(<HomePage />);
+
+    await waitFor(() => expect(scrollTo).toHaveBeenCalledTimes(2));
+    expect(scrollTo).toHaveBeenCalledWith({
+      behavior: 'instant',
+      left: 0,
+      top: 0,
+    });
+    expect(requestAnimationFrame).toHaveBeenCalledOnce();
+    expect(window.location.hash).toBe('');
+    expect(scrollIntoView).not.toHaveBeenCalled();
+  });
+
+  it('restores a direct homepage fragment after client-rendered sections mount', async () => {
     window.location.hash = '#projects';
     const scrollIntoView = vi.fn();
     Object.defineProperty(Element.prototype, 'scrollIntoView', {
