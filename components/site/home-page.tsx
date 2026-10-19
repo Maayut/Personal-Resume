@@ -15,13 +15,13 @@ import {
 } from '@/lib/resume';
 import { projects, type ProjectCase } from '@/lib/projects';
 import { projectAccents } from '@/site/project-accents';
-import { projectHref } from '@/site/routes';
+import { experienceHref, projectHref } from '@/site/routes';
 
 function RestoreHomepageFragment() {
   useLayoutEffect(() => {
-    const navigation = performance.getEntriesByType(
-      'navigation',
-    )[0] as PerformanceNavigationTiming | undefined;
+    const navigation = performance.getEntriesByType('navigation')[0] as
+      | PerformanceNavigationTiming
+      | undefined;
     const previousScrollRestoration = window.history.scrollRestoration;
 
     if (navigation?.type === 'reload') {
@@ -70,14 +70,25 @@ function ExperienceItem({
       delay={delay}
       className={`experience-item ${
         experience.featured ? 'is-featured' : 'is-compact'
-      }`}
+      }${experience.detailId ? ' has-detail' : ''}`}
     >
       <div className="experience-meta">
         <p>{experience.period}</p>
         <p>{experience.domain}</p>
       </div>
       <div className="experience-body">
-        <h3>{experience.company}</h3>
+        <h3>
+          {experience.detailId ? (
+            <a
+              className="experience-company-link"
+              href={experienceHref(experience.detailId)}
+            >
+              {experience.company}
+            </a>
+          ) : (
+            experience.company
+          )}
+        </h3>
         <p className="experience-role">{experience.role}</p>
         <p className="experience-summary">{experience.summary}</p>
         {experience.featured ? (
@@ -86,6 +97,15 @@ function ExperienceItem({
               <li key={highlight}>{highlight}</li>
             ))}
           </ul>
+        ) : null}
+        {experience.detailId ? (
+          <a
+            className="experience-detail-link"
+            href={experienceHref(experience.detailId)}
+            aria-label={`查看${experience.company}实习详情`}
+          >
+            查看实习详情 <span aria-hidden="true">↗</span>
+          </a>
         ) : null}
       </div>
       <ul className="metric-list" aria-label={`${experience.company} 结果`}>
@@ -185,7 +205,7 @@ export function HomePage() {
             label="01 / FIELD EXPERIENCE"
             title="从需求判断到现场交付"
             id="experience-title"
-            note="三段重点经历展开产品对象、关键行动与对应结果；早期数据产品经历以摘要保留。"
+            note="从机器人现场到智能厨房。点击千寻智能、京东科技，展开我的问题判断、产品行动与落地成果。"
           />
           <div className="experience-list">
             {experiences.map((experience, index) => (

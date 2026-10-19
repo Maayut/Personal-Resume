@@ -133,6 +133,25 @@ describe('HomePage', () => {
     expect(portrait.getAttribute('decoding')).toBe('async');
   });
 
+  it('links the two featured internships to their own detail pages', () => {
+    render(<HomePage />);
+    for (const [company, id] of [
+      ['千寻智能', 'qianxun'],
+      ['京东科技', 'jd'],
+    ]) {
+      const link = screen.getByRole('link', { name: `查看${company}实习详情` });
+      expect(link.getAttribute('href')).toMatch(
+        new RegExp(`/experience/${id}/$`),
+      );
+      expect(
+        screen.getByRole('link', { name: company }).getAttribute('href'),
+      ).toBe(link.getAttribute('href'));
+    }
+    expect(
+      screen.queryByRole('link', { name: '查看网易云音乐实习详情' }),
+    ).toBeNull();
+  });
+
   it('uses a single headline hierarchy and labels every editorial section', () => {
     render(<HomePage />);
 

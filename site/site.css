@@ -585,6 +585,37 @@ button {
   font-size: 0.91rem;
 }
 
+.experience-company-link {
+  text-decoration: none;
+  text-underline-offset: 0.18em;
+}
+
+.experience-company-link:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+
+.experience-detail-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 1.6rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--signal);
+  color: var(--signal);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.experience-detail-link span {
+  transition: transform 180ms ease;
+}
+
+.experience-detail-link:hover span {
+  transform: translate(3px, -3px);
+}
+
 .experience-summary {
   margin-top: 1.15rem;
   color: var(--muted-ink);

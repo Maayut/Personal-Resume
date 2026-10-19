@@ -134,6 +134,22 @@ test('homepage output uses base-prefixed local assets that resolve', () => {
   assertBuiltAssetsResolve(homepage, 'homepage');
 });
 
+test('both internship pages are independently deployable with correct metadata and assets', () => {
+  for (const [id, company] of [
+    ['qianxun', '千寻智能'],
+    ['jd', '京东科技'],
+  ]) {
+    const page = readBuilt(`dist-pages/experience/${id}/index.html`);
+    assert.match(page, new RegExp(`data-internship-id="${id}"`));
+    assert.match(page, new RegExp(`<title>${company}实习`));
+    assert.match(
+      page,
+      new RegExp(`https://maayut.github.io/Personal-Resume/experience/${id}/`),
+    );
+    assertBuiltAssetsResolve(page, `${id} internship`);
+  }
+});
+
 test('homepage disables reload restoration before rendering while preserving new links', () => {
   const homepage = readBuilt('dist-pages/index.html');
   const restorationScript = [
@@ -145,9 +161,16 @@ test('homepage disables reload restoration before rendering while preserving new
     'homepage needs an early scroll restoration script',
   );
   assert.ok(restorationScript.index < homepage.indexOf('</head>'));
-  assert.ok(restorationScript.index < homepage.indexOf('<script type="module"'));
+  assert.ok(
+    restorationScript.index < homepage.indexOf('<script type="module"'),
+  );
 
-  for (const navigationType of ['reload', 'navigate', 'back_forward', undefined]) {
+  for (const navigationType of [
+    'reload',
+    'navigate',
+    'back_forward',
+    undefined,
+  ]) {
     const replacements = [];
     const state = { preserved: true };
     const history = {
@@ -157,10 +180,15 @@ test('homepage disables reload restoration before rendering while preserving new
     };
     vm.runInNewContext(restorationScript[1], {
       performance: {
-        getEntriesByType: () => navigationType ? [{ type: navigationType }] : [],
+        getEntriesByType: () =>
+          navigationType ? [{ type: navigationType }] : [],
       },
       history,
-      location: { pathname: basePath, search: '?source=resume', hash: '#contact' },
+      location: {
+        pathname: basePath,
+        search: '?source=resume',
+        hash: '#contact',
+      },
     });
 
     assert.equal(
@@ -169,7 +197,9 @@ test('homepage disables reload restoration before rendering while preserving new
     );
     assert.deepEqual(
       replacements,
-      navigationType === 'reload' ? [[state, '', `${basePath}?source=resume`]] : [],
+      navigationType === 'reload'
+        ? [[state, '', `${basePath}?source=resume`]]
+        : [],
     );
   }
 });
