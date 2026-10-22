@@ -208,8 +208,8 @@ test("locks the approved resume profile and experience facts", async () => {
     "网易云音乐",
     "科大讯飞",
     "featured: false",
-    "约 5s",
-    "540 万",
+    "2.5s → 1.6s",
+    "JOYINSIDE",
   ]) {
     assert.match(source, new RegExp(fact));
   }

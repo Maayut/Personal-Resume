@@ -1,0 +1,196 @@
+/* Lightweight diagrams for the JD internship case study. */
+.internship-jd .kitchen-product-caption {
+  gap: 0.45rem;
+  font-family: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.5;
+  transform: none;
+}
+.internship-jd .kitchen-product-caption span:last-child {
+  color: var(--case-muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.demo-progress .is-complete {
+  color: #fff;
+  background: var(--case-accent, #c91d2a);
+}
+.jd-step-number {
+  color: var(--case-accent);
+  font:
+    0.65rem 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+.jd-evaluation-pipeline {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.jd-evaluation-pipeline li {
+  position: relative;
+  display: grid;
+  gap: 0.55rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--case-line);
+}
+.jd-evaluation-pipeline li:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  top: 2.55rem;
+  right: -1rem;
+  color: var(--case-muted);
+  font-size: 0.8rem;
+}
+.jd-evaluation-pipeline strong {
+  font-size: 1.15rem;
+  font-weight: 550;
+}
+.jd-evaluation-pipeline li > span:last-child {
+  color: var(--case-muted);
+  font-size: 0.73rem;
+}
+.jd-asr-comparison {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.jd-asr-comparison > div {
+  display: grid;
+  gap: 0.8rem;
+}
+.jd-asr-comparison > div > span {
+  color: var(--case-muted);
+  font-size: 0.73rem;
+}
+.jd-asr-comparison strong {
+  font-size: 4.5rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1;
+}
+.jd-asr-comparison small {
+  font-size: 0.5em;
+}
+.jd-asr-comparison > div:last-child strong {
+  color: var(--case-accent);
+}
+.jd-asr-arrow {
+  color: var(--case-muted);
+  font-size: 1.5rem;
+}
+.jd-voice-work {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+  border-top: 1px solid var(--case-line);
+  padding-top: 1.5rem;
+}
+.jd-voice-work strong,
+.jd-work-list strong {
+  font-size: 0.9rem;
+  font-weight: 550;
+}
+.jd-voice-work p {
+  margin: 0.5rem 0 0;
+  color: var(--case-muted);
+  font-size: 0.75rem;
+  line-height: 1.8;
+}
+.jd-work-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jd-work-list li {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  align-items: baseline;
+  gap: 1rem;
+  padding-block: 1.3rem;
+}
+.jd-work-list li + li {
+  border-top: 1px solid var(--case-line);
+}
+.jd-work-list li:last-child {
+  padding-bottom: 0;
+}
+.jd-work-list li > div {
+  display: grid;
+  gap: 0.55rem;
+}
+.jd-work-list li > div > span {
+  color: var(--case-muted);
+  font-size: 0.76rem;
+  line-height: 1.8;
+}
+.jd-sharing-scope {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 2rem;
+  align-items: center;
+}
+.jd-sharing-feature {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.5rem 0;
+}
+.jd-sharing-feature span {
+  color: var(--case-muted);
+  font-size: 0.72rem;
+}
+.jd-sharing-feature strong {
+  color: var(--case-accent);
+  font-size: 1.25rem;
+  font-weight: 550;
+}
+.jd-sharing-scope ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.jd-sharing-scope li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.8rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--case-line);
+  font-size: 0.8rem;
+}
+.jd-sharing-scope li span {
+  color: var(--case-accent);
+  font:
+    0.65rem 'SFMono-Regular',
+    Consolas,
+    monospace;
+}
+@media (max-width: 600px) {
+  .jd-asr-comparison strong {
+    font-size: 3rem;
+  }
+  .jd-evaluation-pipeline {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 2rem;
+  }
+  .jd-evaluation-pipeline li:nth-child(2)::after {
+    content: none;
+  }
+  .jd-voice-work,
+  .jd-sharing-scope {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .jd-sharing-feature {
+    padding: 0.5rem 0 0;
+  }
+  .recommendation-demo .demo-topline {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+}

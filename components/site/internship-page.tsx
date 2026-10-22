@@ -1,10 +1,10 @@
 import { useLayoutEffect } from 'react';
 
 import {
-  EmbodiedField,
   KitchenVoice,
   StoryVisual,
 } from '@/components/site/internship-visuals';
+import { QianxunPage } from '@/components/site/qianxun-page';
 import { Reveal } from '@/components/site/reveal';
 import { SiteNav } from '@/components/site/site-nav';
 import { getInternship } from '@/lib/internships';
@@ -39,8 +39,8 @@ export function InternshipPage({
     );
 
   const { detail, experience } = internship;
-  const isQianxun = detail.id === 'qianxun';
-  const nextId = isQianxun ? 'jd' : 'qianxun';
+  if (detail.id === 'qianxun')
+    return <QianxunPage detail={detail} experience={experience} />;
 
   return (
     <main className={`site-shell internship-shell internship-${detail.id}`}>
@@ -51,7 +51,7 @@ export function InternshipPage({
             <a href={homeHref('#experience')}>
               <span aria-hidden="true">←</span> 返回实习经历
             </a>
-            <span>马毓廷 / INTERNSHIP {isQianxun ? '01' : '02'}</span>
+            <span>马毓廷 / 实习记录 02</span>
           </div>
           <div className="internship-container internship-hero-grid">
             <div className="internship-hero-copy">
@@ -70,22 +70,22 @@ export function InternshipPage({
                 className="internship-primary-link"
                 href={`#${detail.stories[0].id}`}
               >
-                探索我的工作 <span aria-hidden="true">↓</span>
+                查看工作内容 <span aria-hidden="true">↓</span>
               </a>
             </div>
-            {isQianxun ? <EmbodiedField /> : <KitchenVoice />}
+            <KitchenVoice />
           </div>
           <dl className="internship-container internship-role">
             <div>
-              <dt>ROLE / 我的角色</dt>
+              <dt>我的角色</dt>
               <dd>{experience.role}</dd>
             </div>
             <div>
-              <dt>PERIOD / 实习时间</dt>
+              <dt>实习时间</dt>
               <dd>{experience.period}</dd>
             </div>
             <div>
-              <dt>FOCUS / 工作范围</dt>
+              <dt>负责范围</dt>
               <dd>{detail.scope}</dd>
             </div>
           </dl>
@@ -97,8 +97,8 @@ export function InternshipPage({
         >
           <div className="internship-container">
             <div className="internship-section-topline">
-              <h2 id="internship-results-title">工作成果，一眼看见。</h2>
-              <span>OUTCOMES / 实习成果</span>
+              <h2 id="internship-results-title">工作概览</h2>
+              <span>AT A GLANCE</span>
             </div>
             <dl className="internship-metrics">
               {detail.metrics.map((metric) => (
@@ -114,16 +114,15 @@ export function InternshipPage({
 
         <div className="internship-container internship-work">
           <aside className="internship-index" aria-label="本页工作目录">
-            <p>THE WORK / 工作展开</p>
+            <p>工作内容</p>
             <nav aria-label="实习案例章节">
               {detail.stories.map((story, index) => (
                 <a href={`#${story.id}`} key={story.id}>
                   <span>0{index + 1}</span>
-                  {story.label.split(' / ')[1]}
+                  {story.navTitle}
                 </a>
               ))}
             </nav>
-            <span className="internship-index-note">从问题，到产品行动。</span>
           </aside>
           <div className="internship-stories">
             {detail.stories.map((story) => (
@@ -139,7 +138,7 @@ export function InternshipPage({
                   <p className="story-problem">{story.problem}</p>
                   <StoryVisual id={story.id} />
                   <div className="story-actions">
-                    <h3>我的行动</h3>
+                    <h3>具体工作</h3>
                     <ol>
                       {story.actions.map((action) => (
                         <li key={action}>{action}</li>
@@ -147,7 +146,7 @@ export function InternshipPage({
                     </ol>
                   </div>
                   <div className="story-result">
-                    <span>RESULT / 结果</span>
+                    <span>进展与产出</span>
                     <p>{story.result}</p>
                   </div>
                   <p className="story-artifacts">
@@ -165,13 +164,9 @@ export function InternshipPage({
           aria-labelledby="reflection-title"
         >
           <div className="internship-container reflection-grid">
-            <p className="internship-eyebrow">TAKEAWAY / 产品思考</p>
+            <p className="internship-eyebrow">工作总结</p>
             <div>
-              <h2 id="reflection-title">
-                {isQianxun
-                  ? '把可靠，落到每一次交互。'
-                  : '让每一次反馈，成为下一步依据。'}
-              </h2>
+              <h2 id="reflection-title">{detail.reflectionTitle}</h2>
               <p>{detail.reflection}</p>
               <span className="reflection-signature">马毓廷 / AI 产品经理</span>
             </div>
@@ -181,17 +176,12 @@ export function InternshipPage({
 
       <footer className="internship-footer">
         <div className="internship-container">
-          <a className="internship-next" href={experienceHref(nextId)}>
+          <a className="internship-next" href={experienceHref('qianxun')}>
             <span>继续阅读 / NEXT EXPERIENCE</span>
             <strong>
-              {isQianxun ? '京东科技' : '千寻智能'}{' '}
-              <span aria-hidden="true">↗</span>
+              千寻智能 <span aria-hidden="true">↗</span>
             </strong>
-            <p>
-              {isQianxun
-                ? '从智能厨房出发，优化语音与推荐体验。'
-                : '从多模态交互到机器人现场交付。'}
-            </p>
+            <p>茶点服务与接待机器人的多模态交互</p>
           </a>
           <div className="internship-footer-bottom">
             <a href={homeHref('#experience')}>← 返回个人主页</a>

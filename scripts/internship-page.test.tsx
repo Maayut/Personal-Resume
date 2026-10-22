@@ -81,13 +81,13 @@ describe('internship pages', () => {
     {
       id: 'qianxun',
       next: 'jd',
-      heading: '让机器人，在现场可靠响应。',
-      count: 3,
+      heading: '茶点服务与接待机器人多模态交互产品实践',
+      count: 5,
     },
     {
       id: 'jd',
       next: 'qianxun',
-      heading: '让厨房里的 AI，更懂下一句话。',
+      heading: '京造炒菜机器人JOYINSIDE 语音交互',
       count: 5,
     },
   ])(
@@ -117,27 +117,62 @@ describe('internship pages', () => {
     },
   );
 
-  it('asks for preferences only on the third rejection and allows reset', async () => {
+  it('asks for preferences only on the third batch change and allows reset', async () => {
     const user = userEvent.setup();
     render(<RecommendationDemo />);
     for (let count = 0; count < 2; count++) {
-      await user.click(screen.getByRole('button', { name: /不想吃，换一个/ }));
+      await user.click(screen.getByRole('button', { name: /换一批菜谱/ }));
       expect(screen.queryByRole('button', { name: '口味' })).toBeNull();
     }
-    await user.click(screen.getByRole('button', { name: /不想吃，换一个/ }));
+    await user.click(screen.getByRole('button', { name: /换一批菜谱/ }));
     expect(screen.getByRole('status').textContent).toContain(
       '口味、食材，还是烹饪时间',
     );
     await user.click(screen.getByRole('button', { name: '时间' }));
     expect(screen.getByRole('status').textContent).toContain(
-      '已记录「时间」偏好',
+      '根据「时间」补充筛选条件',
     );
     expect(
       screen.getByRole('button', { name: '时间' }).getAttribute('aria-pressed'),
     ).toBe('true');
     await user.click(screen.getByRole('button', { name: '重置' }));
     expect(screen.queryByRole('button', { name: '时间' })).toBeNull();
-    expect(screen.getByText('拒绝次数 0 / 3')).toBeTruthy();
+    expect(screen.getByText('换批次数 0 / 3')).toBeTruthy();
+  });
+
+  it('keeps keyboard focus within the demo when its controls change', async () => {
+    const user = userEvent.setup();
+    render(<RecommendationDemo />);
+    const changeBatch = screen.getByRole('button', { name: /换一批菜谱/ });
+    expect(document.activeElement).not.toBe(changeBatch);
+    await user.tab();
+    expect(document.activeElement).toBe(changeBatch);
+
+    await user.keyboard('{Enter}{Enter}{Enter}');
+    const preferences = screen.getByRole('group', { name: '选择偏好方向' });
+    expect(document.activeElement).toBe(
+      within(preferences).getByRole('button', { name: '口味' }),
+    );
+
+    await user.tab();
+    await user.tab();
+    const timePreference = within(preferences).getByRole('button', {
+      name: '时间',
+    });
+    expect(document.activeElement).toBe(timePreference);
+    await user.keyboard('{Enter}');
+    expect(timePreference.getAttribute('aria-pressed')).toBe('true');
+    expect(document.activeElement).toBe(timePreference);
+
+    await user.tab();
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: '重置' }),
+    );
+    await user.keyboard('{Enter}');
+    expect(screen.queryByRole('group', { name: '选择偏好方向' })).toBeNull();
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: /换一批菜谱/ }),
+    );
   });
 
   it('handles unknown experience ids without showing another company', () => {

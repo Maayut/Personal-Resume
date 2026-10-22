@@ -159,7 +159,7 @@ describe('HomePage', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: '让 AI 从能力走向真实交互',
+        name: profile.headline,
       }),
     ).toBeTruthy();
     for (const [sectionId, heading] of [
@@ -221,22 +221,22 @@ describe('HomePage', () => {
       .closest('article')!;
     expect(compact.classList.contains('is-compact')).toBe(true);
     expect(compact.querySelector('.experience-highlights')).toBeNull();
-    expect(within(compact).getByText('交付效率提升约 100%')).toBeTruthy();
+    expect(within(compact).getByText('标注规范纳入项目生产标准')).toBeTruthy();
     expect(
       screen
-        .getByText('问答响应耗时：约 5s → 约 2s')
+        .getByText('语音延迟：2.5s → 1.6s')
         .closest('article')
         ?.querySelector('h3')?.textContent,
     ).toBe('千寻智能');
     expect(
       screen
-        .getByText('口头禅重复率：40% → 10%')
+        .getByText('ASR 准确率：92% → 95%')
         .closest('article')
         ?.querySelector('h3')?.textContent,
     ).toBe('京东科技');
     expect(
       screen
-        .getByText('TV 端 MAU：540 万 → 900 万')
+        .getByText('4 种分润模式对比')
         .closest('article')
         ?.querySelector('h3')?.textContent,
     ).toBe('网易云音乐');

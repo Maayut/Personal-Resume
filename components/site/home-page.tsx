@@ -205,7 +205,7 @@ export function HomePage() {
             label="01 / FIELD EXPERIENCE"
             title="从需求判断到现场交付"
             id="experience-title"
-            note="从机器人现场到智能厨房。点击千寻智能、京东科技，展开我的问题判断、产品行动与落地成果。"
+            note="主要做多模态交互、语音智能体和设备端产品。点击公司名称，可查看具体工作与项目进展。"
           />
           <div className="experience-list">
             {experiences.map((experience, index) => (

@@ -6,6 +6,7 @@ import { InteractiveHero } from '@/components/site/interactive-hero';
 import { useBackgroundVideo } from '@/hooks/use-background-video';
 import { useHeroPointerFollow } from '@/hooks/use-hero-pointer-follow';
 import { useTypewriter } from '@/hooks/use-typewriter';
+import { profile } from '@/lib/resume';
 
 type MediaListener = (event: MediaQueryListEvent) => void;
 
@@ -254,10 +255,10 @@ describe('useTypewriter', () => {
     const media = installMediaQuery(false);
     render(<TypewriterProbe text="LIVE" speed={10} delay={20} />);
 
-     act(() => media.setReducedMotion(true));
+    act(() => media.setReducedMotion(true));
     expect(screen.getByRole('status').textContent).toBe('LIVE');
     expect(screen.getByRole('status').getAttribute('data-done')).toBe('true');
-     act(() => media.setReducedMotion(false));
+    act(() => media.setReducedMotion(false));
     expect(screen.getByRole('status').textContent).toBe('');
     expect(screen.getByRole('status').getAttribute('data-done')).toBe('false');
     void act(() => vi.advanceTimersByTime(29));
@@ -477,7 +478,7 @@ describe('useBackgroundVideo', () => {
     pointer(900);
     expect(raf.pending()).toBe(1);
     expect(seek).not.toHaveBeenCalled();
-     act(() => raf.flush(100));
+    act(() => raf.flush(100));
 
     expect(seek).toHaveBeenCalledTimes(1);
     expect(video.currentTime).toBeCloseTo((10 - 1 / 24) * 0.8, 1);
@@ -495,7 +496,7 @@ describe('useBackgroundVideo', () => {
     expect(seek).not.toHaveBeenCalled();
 
     metadata(10);
-     act(() => raf.flush(100));
+    act(() => raf.flush(100));
     expect(seek).toHaveBeenCalledTimes(1);
     expect(video.currentTime).toBeCloseTo((10 - 1 / 24) * 0.5, 1);
   });
@@ -506,15 +507,15 @@ describe('useBackgroundVideo', () => {
     const { video, seek, pointer, metadata, finishSeek } = prepareVideo();
     metadata();
     pointer(300);
-     act(() => raf.flush(100));
+    act(() => raf.flush(100));
     expect(seek).toHaveBeenCalledTimes(1);
 
     pointer(600);
     pointer(1000);
-     act(() => raf.flush(200));
+    act(() => raf.flush(200));
     expect(seek).toHaveBeenCalledTimes(1);
     finishSeek();
-     act(() => raf.flush(250));
+    act(() => raf.flush(250));
 
     expect(seek).toHaveBeenCalledTimes(2);
     expect(video.currentTime).toBeCloseTo((10 - 1 / 24) * 0.9, 1);
@@ -526,12 +527,12 @@ describe('useBackgroundVideo', () => {
     const { seek, pointer, metadata, finishSeek } = prepareVideo();
     metadata();
     pointer(300);
-     act(() => raf.flush(100));
+    act(() => raf.flush(100));
     finishSeek();
     pointer(900);
-     act(() => raf.flush(116));
+    act(() => raf.flush(116));
     expect(seek).toHaveBeenCalledTimes(1);
-     act(() => raf.flush(134));
+    act(() => raf.flush(134));
     expect(seek).toHaveBeenCalledTimes(2);
   });
 
@@ -541,11 +542,11 @@ describe('useBackgroundVideo', () => {
     const { video, pointer, metadata, finishSeek } = prepareVideo();
     metadata();
     pointer(1200);
-     act(() => raf.flush(100));
+    act(() => raf.flush(100));
     expect(video.currentTime).toBeCloseTo(10 - 1 / 24, 3);
     finishSeek();
     pointer(0);
-     act(() => raf.flush(200));
+    act(() => raf.flush(200));
     expect(video.currentTime).toBe(0);
   });
 
@@ -556,13 +557,13 @@ describe('useBackgroundVideo', () => {
     metadata();
     pointer(600);
     void act(() => surface.dispatchEvent(new PointerEvent('pointerleave')));
-     act(() => raf.flush(100));
+    act(() => raf.flush(100));
     expect(seek).not.toHaveBeenCalled();
     expect(raf.pending()).toBe(0);
 
     pointer(900);
     unmount();
-     act(() => raf.flush(200));
+    act(() => raf.flush(200));
     expect(seek).not.toHaveBeenCalled();
     expect(raf.pending()).toBe(0);
   });
@@ -573,7 +574,7 @@ describe('useBackgroundVideo', () => {
     const { seek, pointer, metadata, finishSeek } = prepareVideo();
     metadata();
     pointer(300);
-     act(() => raf.flush(100));
+    act(() => raf.flush(100));
     pointer(900);
     Object.defineProperty(document, 'visibilityState', {
       configurable: true,
@@ -582,7 +583,7 @@ describe('useBackgroundVideo', () => {
     void act(() => document.dispatchEvent(new Event('visibilitychange')));
     finishSeek();
     pointer(1000);
-     act(() => raf.flush(200));
+    act(() => raf.flush(200));
     expect(seek).toHaveBeenCalledTimes(1);
     expect(raf.pending()).toBe(0);
   });
@@ -605,8 +606,8 @@ describe('useBackgroundVideo', () => {
     const { pointer, metadata, seek } = prepareVideo();
     metadata();
     pointer(900);
-     act(() => media.setDesktop(false));
-     act(() => raf.flush(100));
+    act(() => media.setDesktop(false));
+    act(() => raf.flush(100));
     await act(async () => undefined);
     expect(play).toHaveBeenCalledTimes(1);
     expect(seek).not.toHaveBeenCalled();
@@ -658,7 +659,7 @@ describe('useBackgroundVideo', () => {
     render(<VideoProbe onReady={() => undefined} />);
 
     expect(pause).toHaveBeenCalledTimes(1);
-     act(() => media.setReducedMotion(false));
+    act(() => media.setReducedMotion(false));
 
     expect(play).toHaveBeenCalledTimes(1);
   });
@@ -674,8 +675,8 @@ describe('useBackgroundVideo', () => {
     );
     render(<VideoProbe onReady={() => undefined} />);
 
-     act(() => media.setReducedMotion(true));
-     act(() => media.setReducedMotion(false));
+    act(() => media.setReducedMotion(true));
+    act(() => media.setReducedMotion(false));
     await act(async () => undefined);
     await act(async () => {
       rejectInitialPlay(new DOMException('Playback interrupted', 'AbortError'));
@@ -697,7 +698,7 @@ describe('useBackgroundVideo', () => {
         }),
     );
     render(<VideoProbe onReady={() => undefined} />);
-     act(() => media.setDesktop(true));
+    act(() => media.setDesktop(true));
     await act(async () => rejectPlay(new Error('interrupted')));
 
     expect(pause).toHaveBeenCalled();
@@ -715,8 +716,8 @@ describe('useBackgroundVideo', () => {
       'true',
     );
 
-     act(() => media.setReducedMotion(true));
-     act(() => media.setReducedMotion(false));
+    act(() => media.setReducedMotion(true));
+    act(() => media.setReducedMotion(false));
     await act(async () => undefined);
 
     expect(play).toHaveBeenCalledTimes(2);
@@ -740,12 +741,14 @@ describe('InteractiveHero', () => {
       screen.getByText('AI PRODUCT MANAGER · EMBODIED INTELLIGENCE'),
     ).toBeTruthy();
     expect(
-      screen.getByRole('heading', { name: '让 AI 从能力走向真实交互' }),
+      screen.getByRole('heading', { name: profile.headline }),
     ).toBeTruthy();
     const video = document.querySelector('video')!;
     expect(video.loop).toBe(true);
     expect(video.getAttribute('poster')).toContain('media/hero-fallback.svg');
-    expect(video.querySelector('source')?.src).toContain('/media/hero-scrub.mp4');
+    expect(video.querySelector('source')?.src).toContain(
+      '/media/hero-scrub.mp4',
+    );
     expect(screen.queryByText(/左右移动/)).toBeNull();
   });
 
@@ -769,12 +772,12 @@ describe('InteractiveHero', () => {
     void act(() => video.dispatchEvent(new Event('loadedmetadata')));
     void act(() =>
       screen
-        .getByRole('heading', { name: '让 AI 从能力走向真实交互' })
+        .getByRole('heading', { name: profile.headline })
         .dispatchEvent(
           new PointerEvent('pointermove', { clientX: 700, bubbles: true }),
         ),
     );
-     act(() => raf.flush(100));
+    act(() => raf.flush(100));
 
     expect(video.currentTime).toBeCloseTo((10 - 1 / 24) * 0.6, 1);
     expect(video.autoplay).toBe(false);
